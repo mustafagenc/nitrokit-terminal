@@ -22,7 +22,6 @@ jobs:
             rust: beta
           - os: ubuntu-latest
             rust: nightly
-        # Remove problematic combinations for now
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -33,6 +32,15 @@ jobs:
         toolchain: ${{ matrix.rust }}
         components: rustfmt, clippy
 
+    - name: Update Cargo.lock if needed
+      run: |
+        # Remove Cargo.lock and regenerate it to ensure compatibility
+        if [ -f Cargo.lock ]; then
+          echo "Regenerating Cargo.lock for compatibility..."
+          rm Cargo.lock
+          cargo generate-lockfile
+        fi
+
     - name: Cache cargo registry
       uses: actions/cache@v4
       with:
@@ -41,8 +49,9 @@ jobs:
           ~/.cargo/registry/cache/
           ~/.cargo/git/db/
           target/
-        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+        key: ${{ runner.os }}-${{ matrix.rust }}-cargo-${{ hashFiles('**/Cargo.toml') }}
         restore-keys: |
+          ${{ runner.os }}-${{ matrix.rust }}-cargo-
           ${{ runner.os }}-cargo-
 
     - name: Install system dependencies (Ubuntu)
@@ -54,7 +63,6 @@ jobs:
     - name: Install system dependencies (macOS)
       if: matrix.os == 'macos-latest'
       run: |
-        # Git is already installed on macOS runners
         echo "Git version: $(git --version)"
 
     - name: Check formatting
@@ -78,13 +86,20 @@ jobs:
   security:
     name: Security Audit
     runs-on: ubuntu-latest
-    continue-on-error: true  # Allow this to fail without stopping other jobs
+    continue-on-error: true
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
 
     - name: Install Rust toolchain
       uses: dtolnay/rust-toolchain@stable
+
+    - name: Update Cargo.lock if needed
+      run: |
+        if [ -f Cargo.lock ]; then
+          rm Cargo.lock
+          cargo generate-lockfile
+        fi
 
     - name: Cache cargo
       uses: actions/cache@v4
@@ -93,7 +108,7 @@ jobs:
           ~/.cargo/registry/index/
           ~/.cargo/registry/cache/
           ~/.cargo/git/db/
-        key: ${{ runner.os }}-cargo-audit-${{ hashFiles('**/Cargo.lock') }}
+        key: ${{ runner.os }}-cargo-audit-${{ hashFiles('**/Cargo.toml') }}
 
     - name: Install cargo-audit
       run: cargo install cargo-audit --locked
@@ -112,6 +127,13 @@ jobs:
       uses: dtolnay/rust-toolchain@stable
       with:
         components: llvm-tools-preview
+
+    - name: Update Cargo.lock if needed
+      run: |
+        if [ -f Cargo.lock ]; then
+          rm Cargo.lock
+          cargo generate-lockfile
+        fi
 
     - name: Install system dependencies
       run: |
@@ -144,6 +166,13 @@ jobs:
       with:
         components: rustfmt, clippy
 
+    - name: Update Cargo.lock if needed
+      run: |
+        if [ -f Cargo.lock ]; then
+          rm Cargo.lock
+          cargo generate-lockfile
+        fi
+
     - name: Cache cargo
       uses: actions/cache@v4
       with:
@@ -152,7 +181,7 @@ jobs:
           ~/.cargo/registry/cache/
           ~/.cargo/git/db/
           target/
-        key: ${{ runner.os }}-lint-${{ hashFiles('**/Cargo.lock') }}
+        key: ${{ runner.os }}-lint-${{ hashFiles('**/Cargo.toml') }}
 
     - name: Check formatting
       run: cargo fmt --all -- --check
@@ -170,6 +199,13 @@ jobs:
     - name: Install Rust toolchain
       uses: dtolnay/rust-toolchain@stable
 
+    - name: Update Cargo.lock if needed
+      run: |
+        if [ -f Cargo.lock ]; then
+          rm Cargo.lock
+          cargo generate-lockfile
+        fi
+
     - name: Install system dependencies
       run: |
         sudo apt-get update
@@ -183,7 +219,7 @@ jobs:
           ~/.cargo/registry/cache/
           ~/.cargo/git/db/
           target/
-        key: ${{ runner.os }}-build-${{ hashFiles('**/Cargo.lock') }}
+        key: ${{ runner.os }}-build-${{ hashFiles('**/Cargo.toml') }}
 
     - name: Build release
       run: cargo build --release --verbose
@@ -204,6 +240,13 @@ jobs:
     - name: Install Rust toolchain (MSRV)
       uses: dtolnay/rust-toolchain@1.70.0
 
+    - name: Update Cargo.lock if needed
+      run: |
+        if [ -f Cargo.lock ]; then
+          rm Cargo.lock
+          cargo generate-lockfile
+        fi
+
     - name: Install system dependencies
       run: |
         sudo apt-get update
@@ -217,26 +260,13 @@ jobs:
           ~/.cargo/registry/cache/
           ~/.cargo/git/db/
           target/
-        key: ${{ runner.os }}-msrv-${{ hashFiles('**/Cargo.lock') }}
+        key: ${{ runner.os }}-msrv-${{ hashFiles('**/Cargo.toml') }}
 
     - name: Check build with MSRV
       run: cargo build --verbose
 
     - name: Check tests with MSRV
       run: cargo test --verbose
-
-  # Remove benchmark job for now as it requires benches to be defined
-  # benchmark:
-  #   name: Performance Benchmarks
-  #   runs-on: ubuntu-latest
-  #   if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-  #   steps:
-  #   - name: Checkout code
-  #     uses: actions/checkout@v4
-  #   - name: Install Rust toolchain
-  #     uses: dtolnay/rust-toolchain@stable
-  #   - name: Run benchmarks
-  #     run: cargo bench --verbose
 
   final-check:
     name: Final Check
