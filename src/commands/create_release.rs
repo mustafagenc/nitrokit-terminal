@@ -2,21 +2,22 @@ use anyhow::{anyhow, Result};
 use colored::*;
 use git2::{Repository, Status};
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::env;
 use std::fs;
 use std::io::{self, Write};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum FrameworkType {
     NextJs,
     Angular,
+    React,
+    Vue,
     NodeJs,
     Rust,
     Laravel,
-    React,
-    Vue,
     Unknown,
 }
 
@@ -31,7 +32,7 @@ pub struct ProjectConfig {
     pub version_file: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize)]
 struct GitHubReleaseRequest {
     tag_name: String,
     target_commitish: String,
@@ -59,17 +60,14 @@ impl ReleaseManager {
         let repo_path = env::current_dir()?;
         let repo = Repository::open(&repo_path)?;
 
-        // Get repository URL
         let repo_url = Self::get_repo_url(&repo)?;
 
-        // Get current branch
         let head = repo.head()?;
         let current_branch = head
             .shorthand()
             .ok_or_else(|| anyhow!("Could not get current branch name"))?
             .to_string();
 
-        // Detect project configuration
         let project_config = Self::detect_project_config(&repo_path)?;
 
         Ok(Self {
@@ -80,47 +78,16 @@ impl ReleaseManager {
         })
     }
 
-    fn detect_project_config(repo_path: &PathBuf) -> Result<ProjectConfig> {
+    fn detect_project_config(repo_path: &Path) -> Result<ProjectConfig> {
         let framework = Self::detect_framework(repo_path);
         let package_manager = Self::detect_package_manager(repo_path);
+
         let (has_tests, has_build, has_lint, version_file) = match &framework {
-            FrameworkType::NextJs => {
-                let scripts = Self::get_package_scripts(repo_path);
-                (
-                    scripts.contains_key("test"),
-                    scripts.contains_key("build"),
-                    scripts.contains_key("lint"),
-                    "package.json".to_string(),
-                )
-            }
-            FrameworkType::Angular => {
-                let scripts = Self::get_package_scripts(repo_path);
-                (
-                    scripts.contains_key("test"),
-                    scripts.contains_key("build"),
-                    scripts.contains_key("lint"),
-                    "package.json".to_string(),
-                )
-            }
-            FrameworkType::NodeJs => {
-                let scripts = Self::get_package_scripts(repo_path);
-                (
-                    scripts.contains_key("test"),
-                    scripts.contains_key("build"),
-                    scripts.contains_key("lint"),
-                    "package.json".to_string(),
-                )
-            }
-            FrameworkType::React => {
-                let scripts = Self::get_package_scripts(repo_path);
-                (
-                    scripts.contains_key("test"),
-                    scripts.contains_key("build"),
-                    scripts.contains_key("lint"),
-                    "package.json".to_string(),
-                )
-            }
-            FrameworkType::Vue => {
+            FrameworkType::NextJs
+            | FrameworkType::Angular
+            | FrameworkType::NodeJs
+            | FrameworkType::React
+            | FrameworkType::Vue => {
                 let scripts = Self::get_package_scripts(repo_path);
                 (
                     scripts.contains_key("test"),
@@ -132,12 +99,12 @@ impl ReleaseManager {
             FrameworkType::Rust => (
                 repo_path.join("Cargo.toml").exists(),
                 repo_path.join("Cargo.toml").exists(),
-                false, // Rust uses clippy, not traditional lint
+                false,
                 "Cargo.toml".to_string(),
             ),
             FrameworkType::Laravel => (
                 repo_path.join("phpunit.xml").exists() || repo_path.join("composer.json").exists(),
-                true, // Laravel projects typically have build process
+                true,
                 false,
                 "composer.json".to_string(),
             ),
@@ -154,8 +121,7 @@ impl ReleaseManager {
         })
     }
 
-    fn detect_framework(repo_path: &PathBuf) -> FrameworkType {
-        // Next.js detection
+    fn detect_framework(repo_path: &Path) -> FrameworkType {
         if repo_path.join("next.config.js").exists()
             || repo_path.join("next.config.ts").exists()
             || repo_path.join("next.config.mjs").exists()
@@ -163,12 +129,10 @@ impl ReleaseManager {
             return FrameworkType::NextJs;
         }
 
-        // Angular detection
         if repo_path.join("angular.json").exists() || repo_path.join("ng.json").exists() {
             return FrameworkType::Angular;
         }
 
-        // Laravel detection
         if repo_path.join("artisan").exists() || repo_path.join("composer.json").exists() {
             if let Ok(content) = fs::read_to_string(repo_path.join("composer.json")) {
                 if content.contains("laravel/framework") {
@@ -177,16 +141,15 @@ impl ReleaseManager {
             }
         }
 
-        // Rust detection
         if repo_path.join("Cargo.toml").exists() {
             return FrameworkType::Rust;
         }
 
-        // React detection (check package.json dependencies)
         if let Ok(content) = fs::read_to_string(repo_path.join("package.json")) {
             if let Ok(package_json) = serde_json::from_str::<serde_json::Value>(&content) {
                 let deps = package_json["dependencies"].as_object();
                 let dev_deps = package_json["devDependencies"].as_object();
+
                 if let Some(deps) = deps {
                     if deps.contains_key("react") {
                         return FrameworkType::React;
@@ -195,6 +158,7 @@ impl ReleaseManager {
                         return FrameworkType::Vue;
                     }
                 }
+
                 if let Some(dev_deps) = dev_deps {
                     if dev_deps.contains_key("react") {
                         return FrameworkType::React;
@@ -206,7 +170,6 @@ impl ReleaseManager {
             }
         }
 
-        // Generic Node.js detection
         if repo_path.join("package.json").exists() {
             return FrameworkType::NodeJs;
         }
@@ -214,7 +177,7 @@ impl ReleaseManager {
         FrameworkType::Unknown
     }
 
-    fn detect_package_manager(repo_path: &PathBuf) -> Option<String> {
+    fn detect_package_manager(repo_path: &Path) -> Option<String> {
         if repo_path.join("pnpm-lock.yaml").exists() {
             Some("pnpm".to_string())
         } else if repo_path.join("yarn.lock").exists() {
@@ -228,8 +191,9 @@ impl ReleaseManager {
         }
     }
 
-    fn get_package_scripts(repo_path: &PathBuf) -> std::collections::HashMap<String, String> {
-        let mut scripts = std::collections::HashMap::new();
+    fn get_package_scripts(repo_path: &Path) -> HashMap<String, String> {
+        let mut scripts = HashMap::new();
+
         if let Ok(content) = fs::read_to_string(repo_path.join("package.json")) {
             if let Ok(package_json) = serde_json::from_str::<serde_json::Value>(&content) {
                 if let Some(scripts_obj) = package_json["scripts"].as_object() {
@@ -241,21 +205,18 @@ impl ReleaseManager {
                 }
             }
         }
+
         scripts
     }
-
-    // ... existing helper methods ...
 
     fn get_repo_url(repo: &Repository) -> Result<String> {
         let remotes = repo.remotes()?;
 
-        for remote_name in remotes.iter() {
-            if let Some(name) = remote_name {
-                if let Ok(remote) = repo.find_remote(name) {
-                    if let Some(url) = remote.url() {
-                        if url.contains("github.com") {
-                            return Ok(Self::normalize_github_url(url));
-                        }
+        for remote_name in remotes.iter().flatten() {
+            if let Ok(remote) = repo.find_remote(remote_name) {
+                if let Some(url) = remote.url() {
+                    if url.contains("github.com") {
+                        return Ok(Self::normalize_github_url(url));
                     }
                 }
             }
@@ -291,34 +252,27 @@ impl ReleaseManager {
 
     fn run_nextjs_tasks(&self, version: &str) -> Result<()> {
         println!("\n{}", "⚡ Running Next.js tasks...".blue().bold());
-
-        // Update package.json version
         self.update_package_version(version)?;
 
         if let Some(pm) = &self.project_config.package_manager {
-            // Install dependencies
             self.run_package_manager_command(pm, "install")?;
             println!("{}   ✓ Dependencies installed", "  ".dimmed());
 
-            // Run linting
             if self.project_config.has_lint {
                 self.run_package_command(pm, "lint")?;
                 println!("{}   ✓ Code linted", "  ".dimmed());
             }
 
-            // Run tests
             if self.project_config.has_tests {
                 self.run_package_command(pm, "test")?;
                 println!("{}   ✓ Tests passed", "  ".dimmed());
             }
 
-            // Build project
             if self.project_config.has_build {
                 self.run_package_command(pm, "build")?;
                 println!("{}   ✓ Project built", "  ".dimmed());
             }
 
-            // Generate build info if available
             if self.has_package_script("build:analyze") {
                 self.run_package_command(pm, "build:analyze")?;
                 println!("{}   ✓ Build analyzed", "  ".dimmed());
@@ -330,40 +284,32 @@ impl ReleaseManager {
 
     fn run_angular_tasks(&self, version: &str) -> Result<()> {
         println!("\n{}", "🅰️  Running Angular tasks...".blue().bold());
-
-        // Update package.json version
         self.update_package_version(version)?;
 
         if let Some(pm) = &self.project_config.package_manager {
-            // Install dependencies
             self.run_package_manager_command(pm, "install")?;
             println!("{}   ✓ Dependencies installed", "  ".dimmed());
 
-            // Run linting
             if self.has_package_script("lint") {
                 self.run_package_command(pm, "lint")?;
                 println!("{}   ✓ Code linted", "  ".dimmed());
             }
 
-            // Run tests
             if self.has_package_script("test") {
                 self.run_package_command(pm, "test")?;
                 println!("{}   ✓ Tests passed", "  ".dimmed());
             }
 
-            // Run e2e tests if available
             if self.has_package_script("e2e") {
                 self.run_package_command(pm, "e2e")?;
                 println!("{}   ✓ E2E tests passed", "  ".dimmed());
             }
 
-            // Build project
             if self.has_package_script("build") {
                 self.run_package_command(pm, "build")?;
                 println!("{}   ✓ Project built", "  ".dimmed());
             }
 
-            // Build for production
             if self.has_package_script("build:prod") {
                 self.run_package_command(pm, "build:prod")?;
                 println!("{}   ✓ Production build completed", "  ".dimmed());
@@ -375,34 +321,27 @@ impl ReleaseManager {
 
     fn run_nodejs_tasks(&self, version: &str) -> Result<()> {
         println!("\n{}", "📦 Running Node.js tasks...".blue().bold());
-
-        // Update package.json version
         self.update_package_version(version)?;
 
         if let Some(pm) = &self.project_config.package_manager {
-            // Install dependencies
             self.run_package_manager_command(pm, "install")?;
             println!("{}   ✓ Dependencies installed", "  ".dimmed());
 
-            // Security audit
             if pm == "npm" && self.has_package_script("audit") {
                 self.run_package_command(pm, "audit")?;
                 println!("{}   ✓ Security audit completed", "  ".dimmed());
             }
 
-            // Run linting
             if self.project_config.has_lint {
                 self.run_package_command(pm, "lint")?;
                 println!("{}   ✓ Code linted", "  ".dimmed());
             }
 
-            // Format code
             if self.has_package_script("format") {
                 self.run_package_command(pm, "format")?;
                 println!("{}   ✓ Code formatted", "  ".dimmed());
             }
 
-            // Run tests
             if self.project_config.has_tests {
                 if self.has_package_script("test:coverage") {
                     self.run_package_command(pm, "test:coverage")?;
@@ -413,7 +352,6 @@ impl ReleaseManager {
                 }
             }
 
-            // Build project
             if self.project_config.has_build {
                 self.run_package_command(pm, "build")?;
                 println!("{}   ✓ Project built", "  ".dimmed());
@@ -425,34 +363,27 @@ impl ReleaseManager {
 
     fn run_react_tasks(&self, version: &str) -> Result<()> {
         println!("\n{}", "⚛️  Running React tasks...".blue().bold());
-
-        // Update package.json version
         self.update_package_version(version)?;
 
         if let Some(pm) = &self.project_config.package_manager {
-            // Install dependencies
             self.run_package_manager_command(pm, "install")?;
             println!("{}   ✓ Dependencies installed", "  ".dimmed());
 
-            // Run linting
             if self.project_config.has_lint {
                 self.run_package_command(pm, "lint")?;
                 println!("{}   ✓ Code linted", "  ".dimmed());
             }
 
-            // Run tests
             if self.project_config.has_tests {
                 self.run_package_command(pm, "test")?;
                 println!("{}   ✓ Tests passed", "  ".dimmed());
             }
 
-            // Build project
             if self.project_config.has_build {
                 self.run_package_command(pm, "build")?;
                 println!("{}   ✓ Project built", "  ".dimmed());
             }
 
-            // Generate bundle analysis if available
             if self.has_package_script("analyze") {
                 self.run_package_command(pm, "analyze")?;
                 println!("{}   ✓ Bundle analyzed", "  ".dimmed());
@@ -464,22 +395,17 @@ impl ReleaseManager {
 
     fn run_vue_tasks(&self, version: &str) -> Result<()> {
         println!("\n{}", "💚 Running Vue.js tasks...".blue().bold());
-
-        // Update package.json version
         self.update_package_version(version)?;
 
         if let Some(pm) = &self.project_config.package_manager {
-            // Install dependencies
             self.run_package_manager_command(pm, "install")?;
             println!("{}   ✓ Dependencies installed", "  ".dimmed());
 
-            // Run linting
             if self.project_config.has_lint {
                 self.run_package_command(pm, "lint")?;
                 println!("{}   ✓ Code linted", "  ".dimmed());
             }
 
-            // Run tests
             if self.project_config.has_tests {
                 if self.has_package_script("test:unit") {
                     self.run_package_command(pm, "test:unit")?;
@@ -490,7 +416,6 @@ impl ReleaseManager {
                 }
             }
 
-            // Build project
             if self.project_config.has_build {
                 self.run_package_command(pm, "build")?;
                 println!("{}   ✓ Project built", "  ".dimmed());
@@ -502,11 +427,8 @@ impl ReleaseManager {
 
     fn run_rust_tasks(&self, version: &str) -> Result<()> {
         println!("\n{}", "🦀 Running Rust tasks...".blue().bold());
-
-        // Update Cargo.toml version
         self.update_cargo_version(version)?;
 
-        // Format code
         if Command::new("cargo")
             .arg("fmt")
             .arg("--version")
@@ -517,7 +439,6 @@ impl ReleaseManager {
             println!("{}   ✓ Code formatted", "  ".dimmed());
         }
 
-        // Run clippy
         if Command::new("cargo")
             .arg("clippy")
             .arg("--version")
@@ -528,15 +449,12 @@ impl ReleaseManager {
             println!("{}   ✓ Clippy linting passed", "  ".dimmed());
         }
 
-        // Run tests
         self.run_cargo_command("test")?;
         println!("{}   ✓ Tests passed", "  ".dimmed());
 
-        // Build release
         self.run_cargo_command("build --release")?;
         println!("{}   ✓ Release build completed", "  ".dimmed());
 
-        // Check documentation
         self.run_cargo_command("doc --no-deps")?;
         println!("{}   ✓ Documentation generated", "  ".dimmed());
 
@@ -545,17 +463,13 @@ impl ReleaseManager {
 
     fn run_laravel_tasks(&self, version: &str) -> Result<()> {
         println!("\n{}", "🐘 Running Laravel tasks...".blue().bold());
-
-        // Update composer.json version if it exists
         self.update_composer_version(version)?;
 
-        // Install/update dependencies
         if Command::new("composer").arg("--version").output().is_ok() {
             self.run_composer_command("install --optimize-autoloader")?;
             println!("{}   ✓ Composer dependencies installed", "  ".dimmed());
         }
 
-        // Generate application key if needed
         if self.repo_path.join(".env.example").exists() && !self.repo_path.join(".env").exists() {
             fs::copy(
                 self.repo_path.join(".env.example"),
@@ -565,26 +479,22 @@ impl ReleaseManager {
             println!("{}   ✓ Application key generated", "  ".dimmed());
         }
 
-        // Clear caches
         self.run_artisan_command("config:clear")?;
         self.run_artisan_command("cache:clear")?;
         self.run_artisan_command("route:clear")?;
         self.run_artisan_command("view:clear")?;
         println!("{}   ✓ Caches cleared", "  ".dimmed());
 
-        // Run tests
         if self.repo_path.join("phpunit.xml").exists() {
             self.run_php_command("vendor/bin/phpunit")?;
             println!("{}   ✓ PHPUnit tests passed", "  ".dimmed());
         }
 
-        // Run static analysis if available
         if self.repo_path.join("vendor/bin/phpstan").exists() {
             self.run_php_command("vendor/bin/phpstan analyse")?;
             println!("{}   ✓ Static analysis passed", "  ".dimmed());
         }
 
-        // Optimize for production
         self.run_artisan_command("config:cache")?;
         self.run_artisan_command("route:cache")?;
         self.run_artisan_command("view:cache")?;
@@ -593,7 +503,6 @@ impl ReleaseManager {
         Ok(())
     }
 
-    // Helper methods for different package managers and tools
     fn run_package_manager_command(&self, pm: &str, command: &str) -> Result<()> {
         println!(
             "{}   → Running: {} {}",
@@ -742,6 +651,7 @@ impl ReleaseManager {
 
         let content = fs::read_to_string(&package_json_path)?;
         let mut package_json: serde_json::Value = serde_json::from_str(&content)?;
+
         let version_without_v = version.strip_prefix('v').unwrap_or(version);
         package_json["version"] = serde_json::Value::String(version_without_v.to_string());
 
@@ -796,6 +706,7 @@ impl ReleaseManager {
 
         let content = fs::read_to_string(&composer_json_path)?;
         let mut composer_json: serde_json::Value = serde_json::from_str(&content)?;
+
         let version_without_v = version.strip_prefix('v').unwrap_or(version);
         composer_json["version"] = serde_json::Value::String(version_without_v.to_string());
 
@@ -810,8 +721,6 @@ impl ReleaseManager {
 
         Ok(())
     }
-
-    // ... other existing methods (validate_version, check_tag_exists, etc.) ...
 
     fn check_working_directory_clean(&self) -> Result<()> {
         let repo = Repository::open(&self.repo_path)?;
@@ -848,10 +757,8 @@ impl ReleaseManager {
         }
 
         for (i, part) in parts.iter().enumerate() {
-            if i < 3 {
-                if part.parse::<u32>().is_err() {
-                    return Err(anyhow!("Version parts must be numbers"));
-                }
+            if i < 3 && part.parse::<u32>().is_err() {
+                return Err(anyhow!("Version parts must be numbers"));
             }
         }
 
@@ -929,19 +836,15 @@ impl ReleaseManager {
         );
         println!("{}", "═".repeat(50).dimmed());
 
-        // Validate version format
         self.validate_version(version)?;
         println!("{}   ✓ Version format validated", "  ".dimmed());
 
-        // Check if tag already exists
         self.check_tag_exists(version)?;
         println!("{}   ✓ Tag {} is available", "  ".dimmed(), version.green());
 
-        // Check working directory is clean
         self.check_working_directory_clean()?;
         println!("{}   ✓ Working directory is clean", "  ".dimmed());
 
-        // Ensure on main branch
         if self.current_branch != "main" && self.current_branch != "master" {
             return Err(anyhow!(
                 "Not on main/master branch (currently on: {})",
@@ -954,10 +857,9 @@ impl ReleaseManager {
             self.current_branch.green()
         );
 
-        // Pull latest changes
         println!("\n{}", "📥 Pulling latest changes...".blue().bold());
         let output = Command::new("git")
-            .args(&["pull", "origin", &self.current_branch])
+            .args(["pull", "origin", &self.current_branch])
             .current_dir(&self.repo_path)
             .output()?;
 
@@ -967,18 +869,14 @@ impl ReleaseManager {
         }
         println!("{}   ✓ Latest changes pulled", "  ".dimmed());
 
-        // Run framework-specific tasks
         self.run_framework_tasks(version)?;
 
-        // Generate release notes
         let release_notes = message
             .unwrap_or(&format!("Release {}", version))
             .to_string();
 
-        // Commit version update
         println!("\n{}", "📝 Committing changes...".blue().bold());
 
-        // Add all modified version files
         let mut files_to_add = Vec::new();
         if self.repo_path.join("package.json").exists() {
             files_to_add.push("package.json");
@@ -998,28 +896,27 @@ impl ReleaseManager {
                 .output()?;
 
             Command::new("git")
-                .args(&["commit", "-m", &format!("Bump version to {}", version)])
+                .args(["commit", "-m", &format!("Bump version to {}", version)])
                 .current_dir(&self.repo_path)
                 .output()?;
 
             println!("{}   ✓ Version commit created", "  ".dimmed());
         }
 
-        // Create and push tag
         println!("\n{}", "🏷️  Creating and pushing tag...".blue().bold());
 
         Command::new("git")
-            .args(&["tag", "-a", version, "-m", &format!("Release {}", version)])
+            .args(["tag", "-a", version, "-m", &format!("Release {}", version)])
             .current_dir(&self.repo_path)
             .output()?;
 
         Command::new("git")
-            .args(&["push", "origin", &self.current_branch])
+            .args(["push", "origin", &self.current_branch])
             .current_dir(&self.repo_path)
             .output()?;
 
         Command::new("git")
-            .args(&["push", "origin", version])
+            .args(["push", "origin", version])
             .current_dir(&self.repo_path)
             .output()?;
 
@@ -1029,7 +926,6 @@ impl ReleaseManager {
             version.green()
         );
 
-        // Create GitHub release
         if env::var("GITHUB_TOKEN").is_ok() {
             println!("\n{}", "🎉 Creating GitHub release...".blue().bold());
 
@@ -1103,7 +999,6 @@ pub async fn create_release_interactive() -> Result<()> {
     }
     println!();
 
-    // Get version
     print!("{}", "Enter release version (e.g., v1.0.0): ".cyan());
     io::stdout().flush()?;
     let mut version = String::new();
@@ -1114,7 +1009,6 @@ pub async fn create_release_interactive() -> Result<()> {
         return Err(anyhow!("Version is required"));
     }
 
-    // Get optional message
     print!(
         "{}",
         format!("Enter release message [Release {}]: ", version).cyan()
@@ -1130,7 +1024,6 @@ pub async fn create_release_interactive() -> Result<()> {
         Some(message)
     };
 
-    // Confirm
     println!();
     println!("{}", "📋 Release Summary:".yellow().bold());
     println!("{}   Version: {}", "  ".dimmed(), version.green());
@@ -1164,7 +1057,7 @@ pub async fn create_release_interactive() -> Result<()> {
         return Ok(());
     }
 
-    manager.create_release(version, message.as_deref()).await?;
+    manager.create_release(version, message).await?;
 
     Ok(())
 }
@@ -1172,4 +1065,58 @@ pub async fn create_release_interactive() -> Result<()> {
 pub async fn create_release_with_args(version: &str, message: Option<&str>) -> Result<()> {
     let manager = ReleaseManager::new()?;
     manager.create_release(version, message).await
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+    use tempfile::TempDir;
+
+    #[test]
+    fn test_framework_detection_nextjs() {
+        let temp_dir = TempDir::new().unwrap();
+        let path = temp_dir.path();
+
+        fs::write(path.join("next.config.js"), "module.exports = {}").unwrap();
+
+        let framework = ReleaseManager::detect_framework(path);
+        assert!(matches!(framework, FrameworkType::NextJs));
+    }
+
+    #[test]
+    fn test_framework_detection_rust() {
+        let temp_dir = TempDir::new().unwrap();
+        let path = temp_dir.path();
+
+        fs::write(path.join("Cargo.toml"), "[package]\nname = \"test\"").unwrap();
+
+        let framework = ReleaseManager::detect_framework(path);
+        assert!(matches!(framework, FrameworkType::Rust));
+    }
+
+    #[test]
+    fn test_package_manager_detection_npm() {
+        let temp_dir = TempDir::new().unwrap();
+        let path = temp_dir.path();
+
+        fs::write(path.join("package-lock.json"), "{}").unwrap();
+
+        let pm = ReleaseManager::detect_package_manager(path);
+        assert_eq!(pm, Some("npm".to_string()));
+    }
+
+    #[test]
+    fn test_normalize_github_url_ssh() {
+        let ssh_url = "git@github.com:user/repo.git";
+        let normalized = ReleaseManager::normalize_github_url(ssh_url);
+        assert_eq!(normalized, "user/repo");
+    }
+
+    #[test]
+    fn test_normalize_github_url_https() {
+        let https_url = "https://github.com/user/repo.git";
+        let normalized = ReleaseManager::normalize_github_url(https_url);
+        assert_eq!(normalized, "user/repo");
+    }
 }
