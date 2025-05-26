@@ -9,7 +9,6 @@ pub struct Config {
 
 impl Config {
     pub fn load_config() -> Self {
-        // TODO: Implement actual config loading from file
         Self::default()
     }
 }

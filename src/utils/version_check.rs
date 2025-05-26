@@ -178,29 +178,3 @@ fn show_update_available(release: &GitHubRelease, current_version: &str) {
     println!("{}", "═".repeat(50).dimmed());
     println!();
 }
-
-pub fn show_version_info(current_version: &str) {
-    println!(
-        "{}",
-        format!("🚀 NitroKit v{}", current_version).cyan().bold()
-    );
-    println!(
-        "{}",
-        "A terminal tool for project management and automation".dimmed()
-    );
-    println!("{}", "Built with Rust 🦀".dimmed());
-    println!();
-    println!(
-        "{}",
-        "Repository: https://github.com/mustafagenc/nitrokit-terminal"
-            .blue()
-            .underline()
-    );
-    println!(
-        "{}",
-        "Issues: https://github.com/mustafagenc/nitrokit-terminal/issues"
-            .blue()
-            .underline()
-    );
-    println!();
-}

@@ -1,0 +1,250 @@
+{
+  "about": {
+    "description": "Bu, Next.js ile oluşturulmuş bir başlangıç şablonudur. Bu şablon, hızlı ve etkili bir şekilde web uygulamaları geliştirmek için tasarlanmıştır.",
+    "title": "Hakkımızda"
+  },
+  "app": {
+    "description": "Nitrokit başlangıç şablonu",
+    "name": "Nitrokit",
+    "shortName": "Nitrokit"
+  },
+  "auth": {
+    "account": "Hesap bilgileri",
+    "billing": "Faturalarım",
+    "confirmPassword": "Şifreyi Onayla",
+    "email": "E-posta",
+    "forgotPassword": "Şifremi Unuttum",
+    "name": "Adınız",
+    "password": "Şifre",
+    "privacyPolicy": "Gizlilik Politikamız",
+    "signin": "Giriş Yap",
+    "signinWithApple": "Apple ile Giriş Yap",
+    "signinWithFacebook": "Facebook ile Giriş Yap",
+    "signinWithGithub": "Github ile Giriş Yap",
+    "signinWithGitlab": "GitLab ile Giriş Yap",
+    "signinWithGoogle": "Google ile Giriş Yap",
+    "signinWithInstagram": "Instagram ile Giriş Yap",
+    "signinWithLinkedIn": "LinkedIn ile Giriş Yap",
+    "signinWithMicrosoft": "Microsoft ile Giriş Yap",
+    "signinWithTwitter": "Twitter ile Giriş Yap",
+    "signout": "Çıkış Yap",
+    "signup": "Kayıt Ol",
+    "slogan1": "Projelerinize <span>roket 🚀</span> gibi bir başlangıç yapın!",
+    "slogan2": "<link>Nitrokit</link> ile zamandan kazanın ve geliştirmeye odaklanın...",
+    "support": "Destek"
+  },
+  "blog": {
+    "description": "En son haberler ve güncellemeler için blogumuzu takip edin.",
+    "title": "Blog"
+  },
+  "common": {
+    "backToHome": "Ana sayfaya dön",
+    "cancel": "İptal",
+    "contactUs": "Bize Ulaşın",
+    "continue": "Devam et",
+    "error": "Bir hata oluştu",
+    "goBack": "Geri dön",
+    "loading": "Yükleniyor...",
+    "no": "Hayır",
+    "notFound": "Aradığınız sayfa bulunamadı",
+    "ok": "Tamam",
+    "submit": "Gönder",
+    "yes": "Evet"
+  },
+  "contact": {
+    "description": "Lütfen aşağıdaki formu doldurarak bizimle iletişime geçin.",
+    "email": "E-posta Adresiniz",
+    "message": "Mesajınız",
+    "messageSent": "Mesajınız başarıyla gönderildi!",
+    "name": "Adınız Soyadınız",
+    "send": "Gönder",
+    "title": "İletişim"
+  },
+  "error": {
+    "retry": "Yeniden Dene",
+    "title": "Bir Hata Oluştu"
+  },
+  "footer": {
+    "copyright": "© Telif Hakkı {year, date, ::yyyy} {name} ♥️ Tüm Hakları Saklıdır.",
+    "poweredBy": "Güçlendirildi <link>Ekipisi</link> ile"
+  },
+  "metadata": {
+    "applicationName": "Nitrokit Başlangıç Şablonu",
+    "author": "Mustafa Genç",
+    "description": "Nitrokit başlangıç şablonu",
+    "title": "Nitrokit Başlangıç Şablonu"
+  },
+  "navigation": {
+    "about": "Hakkımızda",
+    "blog": "Blog",
+    "components": {
+      "button_components": {
+        "description": "Interactive buttons with variants and states",
+        "title": "Button Components"
+      },
+      "categories": {
+        "display": "Display",
+        "feedback": "Feedback",
+        "form": "Form",
+        "layout": "Layout",
+        "overlay": "Overlay"
+      },
+      "count": "50+ Components",
+      "data_display": {
+        "description": "Tables, cards, and data visualization",
+        "title": "Data Display"
+      },
+      "description": "Reusable components built with Radix UI and Tailwind CSS",
+      "feedback": {
+        "description": "Alerts, notifications, and loading states",
+        "title": "Feedback"
+      },
+      "form_controls": {
+        "description": "Input fields, selects, and form elements",
+        "title": "Form Controls"
+      },
+      "modals_overlays": {
+        "description": "Dialogs, tooltips, and overlay components",
+        "title": "Modals & Overlays"
+      },
+      "navigation_components": {
+        "description": "Menu and navigation components",
+        "title": "Navigation"
+      },
+      "subtitle": "UI Components",
+      "title": "Components",
+      "view_all": "View all components"
+    },
+    "contact": "İletişim",
+    "home": "Ana Sayfa",
+    "pricing": "Fiyatlar",
+    "services": {
+      "badges": {
+        "new": "New",
+        "popular": "Popular"
+      },
+      "description": "Professional development services to realize your vision.",
+      "performance_optimization": {
+        "description": "Lightning-fast applications and websites",
+        "title": "Performance Optimization"
+      },
+      "premium_badge": "Premium Services",
+      "team_augmentation": {
+        "description": "Scale your development team with experts",
+        "title": "Team Augmentation"
+      },
+      "title": "Services",
+      "ui_ux_design": {
+        "description": "Beautiful and intuitive user interfaces",
+        "title": "UI/UX Design"
+      },
+      "web_development": {
+        "description": "Full-stack web applications with modern technologies",
+        "title": "Web Development"
+      }
+    },
+    "title": "Menü"
+  },
+  "notFound": {
+    "description": "Hata! Aradığınız sayfa mevcut değil.",
+    "returnHome": "Ana Sayfaya Dön",
+    "title": "Sayfa Bulunamadı"
+  },
+  "placeholder": {
+    "confirmYourPassword": "Şifreyi onaylayın",
+    "enterYourEmail": "E-posta adresinizi girin",
+    "enterYourMessage": "Mesajınızı girin",
+    "enterYourName": "Adınızı girin",
+    "enterYourPassword": "Şifrenizi girin"
+  },
+  "pricing": {
+    "annual-payment": "Yıllık ödemede <span>%20 tasarruf edin.</span>",
+    "description": "Hedef kitlenizle etkileşim kurmak, müşteri sadakati oluşturmak ve satışları artırmak için en iyi özelliklerle dolu uygun fiyatlı bir plan seçin.",
+    "enterprise": {
+      "description": "Kurumsal ihtiyaçlarınız için özel bir fiyat teklifi almak için bizimle iletişime geçin.",
+      "title": "Kurumsal"
+    },
+    "features": {
+      "1hoursupport": "1 saat destek",
+      "24hoursupport": "24 saat destek",
+      "25products": "10 ürün",
+      "48hoursupport": "48 saat destek",
+      "5products": "5 ürün",
+      "advancedanalytics": "Gelişmiş analizler",
+      "basicanalytics": "Temel analizler",
+      "marketingautomations": "Pazarlama otomasyonları",
+      "unlimitedproducts": "Sınırsız ürün",
+      "unlimitedsubscribers": "Sınırsız abone",
+      "upto10000subscribers": "10.000 aboneye kadar",
+      "upto1000subscribers": "1000 aboneye kadar",
+      "xhoursupport": "{count} saat destek"
+    },
+    "freelancer": {
+      "description": "Müşterileriniz için en iyi çalışmanızı sağlamak için temel özellikler.",
+      "title": "Serbest Çalışan"
+    },
+    "monthly": "Aylık",
+    "pricePerMonth": "Ay",
+    "pricePerYear": "Yıl",
+    "pro": {
+      "description": "Şirketiniz için özel destek ve altyapı.",
+      "title": "Profesyonel"
+    },
+    "purchasePlan": "Satın Al",
+    "startup": {
+      "description": "Hızla büyüyen işletmenizle ölçeklenen bir plan.",
+      "title": "Girişim"
+    },
+    "subtitle": "Ölçeklenebilir fiyatlandırma",
+    "title": "Fiyatlar",
+    "yearly": "Yıllık"
+  },
+  "privacy": {
+    "description": "Gizlilik politikamız hakkında daha fazla bilgi edinin.",
+    "title": "Gizlilik Politikası"
+  },
+  "resetPassword": {
+    "description": "E-posta adresinizi girin ve şifrenizi sıfırlamak için talimatları takip edin.",
+    "emailSent": "E-posta gönderildi! Lütfen e-postanızı kontrol edin.",
+    "title": "Şifrenizi Sıfırlayın"
+  },
+  "services": {
+    "description": "Sunduğumuz hizmetler hakkında daha fazla bilgi edinin.",
+    "title": "Hizmetlerimiz"
+  },
+  "signin": {
+    "description": "Tekrar hoş geldiniz! Devam etmek için lütfen giriş yapın",
+    "dontHaveAnAccount": "Hesabınız yok mu? <link>Kaydol</link>.",
+    "title": "{appName}'e Giriş Yap"
+  },
+  "signup": {
+    "alreadyHaveAnAccount": "Zaten bir hesabınız var mı? <link>Giriş Yap</link>.",
+    "title": "{appName}'e Kaydol"
+  },
+  "validation": {
+    "invalid": {
+      "email": "Geçersiz e-posta adresi."
+    },
+    "password": {
+      "confirm": "Şifreler eşleşmiyor.",
+      "good": "iyi",
+      "lowercase": "En az bir küçük harf içermelidir.",
+      "maxLength": "Şifre en fazla {max} karakter olmalıdır.",
+      "minLength": "Şifre en az {min} karakter olmalıdır.",
+      "number": "En az bir rakam içermelidir.",
+      "okay": "iyi sayılır",
+      "special": "En az bir özel karakter içermelidir.",
+      "strong": "güçlü",
+      "tooShort": "çok kısa",
+      "uppercase": "En az bir büyük harf içermelidir.",
+      "weak": "zayıf"
+    },
+    "required": {
+      "confirmPassword": "Şifreyi onaylama alanı gereklidir.",
+      "email": "E-posta alanı gereklidir.",
+      "message": "Mesaj alanı gereklidir.",
+      "name": "Ad alanı gereklidir.",
+      "password": "Şifre alanı gereklidir."
+    }
+  }
+}
