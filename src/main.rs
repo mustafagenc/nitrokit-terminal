@@ -10,7 +10,6 @@ mod tests;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
-
 fn print_banner() {
     let banner = r#"
     ███╗   ██╗██╗████████╗██████╗  ██████╗ ██╗  ██╗██╗████████╗

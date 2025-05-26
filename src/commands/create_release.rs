@@ -156,21 +156,20 @@ impl ReleaseManager {
 
     fn detect_framework(repo_path: &PathBuf) -> FrameworkType {
         // Next.js detection
-        if repo_path.join("next.config.js").exists() ||
-           repo_path.join("next.config.ts").exists() ||
-           repo_path.join("next.config.mjs").exists() {
+        if repo_path.join("next.config.js").exists()
+            || repo_path.join("next.config.ts").exists()
+            || repo_path.join("next.config.mjs").exists()
+        {
             return FrameworkType::NextJs;
         }
 
         // Angular detection
-        if repo_path.join("angular.json").exists() ||
-           repo_path.join("ng.json").exists() {
+        if repo_path.join("angular.json").exists() || repo_path.join("ng.json").exists() {
             return FrameworkType::Angular;
         }
 
         // Laravel detection
-        if repo_path.join("artisan").exists() ||
-           repo_path.join("composer.json").exists() {
+        if repo_path.join("artisan").exists() || repo_path.join("composer.json").exists() {
             if let Ok(content) = fs::read_to_string(repo_path.join("composer.json")) {
                 if content.contains("laravel/framework") {
                     return FrameworkType::Laravel;
@@ -281,7 +280,10 @@ impl ReleaseManager {
             FrameworkType::Rust => self.run_rust_tasks(version),
             FrameworkType::Laravel => self.run_laravel_tasks(version),
             FrameworkType::Unknown => {
-                println!("{}   ⚠️  Unknown framework, skipping framework-specific tasks", "  ".yellow());
+                println!(
+                    "{}   ⚠️  Unknown framework, skipping framework-specific tasks",
+                    "  ".yellow()
+                );
                 Ok(())
             }
         }
@@ -505,13 +507,23 @@ impl ReleaseManager {
         self.update_cargo_version(version)?;
 
         // Format code
-        if Command::new("cargo").arg("fmt").arg("--version").output().is_ok() {
+        if Command::new("cargo")
+            .arg("fmt")
+            .arg("--version")
+            .output()
+            .is_ok()
+        {
             self.run_cargo_command("fmt")?;
             println!("{}   ✓ Code formatted", "  ".dimmed());
         }
 
         // Run clippy
-        if Command::new("cargo").arg("clippy").arg("--version").output().is_ok() {
+        if Command::new("cargo")
+            .arg("clippy")
+            .arg("--version")
+            .output()
+            .is_ok()
+        {
             self.run_cargo_command("clippy -- -D warnings")?;
             println!("{}   ✓ Clippy linting passed", "  ".dimmed());
         }
@@ -545,7 +557,10 @@ impl ReleaseManager {
 
         // Generate application key if needed
         if self.repo_path.join(".env.example").exists() && !self.repo_path.join(".env").exists() {
-            fs::copy(self.repo_path.join(".env.example"), self.repo_path.join(".env"))?;
+            fs::copy(
+                self.repo_path.join(".env.example"),
+                self.repo_path.join(".env"),
+            )?;
             self.run_artisan_command("key:generate")?;
             println!("{}   ✓ Application key generated", "  ".dimmed());
         }
@@ -580,7 +595,12 @@ impl ReleaseManager {
 
     // Helper methods for different package managers and tools
     fn run_package_manager_command(&self, pm: &str, command: &str) -> Result<()> {
-        println!("{}   → Running: {} {}", "  ".dimmed(), pm.cyan(), command.cyan());
+        println!(
+            "{}   → Running: {} {}",
+            "  ".dimmed(),
+            pm.cyan(),
+            command.cyan()
+        );
 
         let output = Command::new(pm)
             .args(command.split_whitespace())
@@ -597,7 +617,12 @@ impl ReleaseManager {
     }
 
     fn run_package_command(&self, pm: &str, command: &str) -> Result<()> {
-        println!("{}   → Running: {} {}", "  ".dimmed(), pm.cyan(), command.cyan());
+        println!(
+            "{}   → Running: {} {}",
+            "  ".dimmed(),
+            pm.cyan(),
+            command.cyan()
+        );
 
         let mut cmd = Command::new(pm);
         match pm {
@@ -662,7 +687,11 @@ impl ReleaseManager {
     }
 
     fn run_artisan_command(&self, command: &str) -> Result<()> {
-        println!("{}   → Running: php artisan {}", "  ".dimmed(), command.cyan());
+        println!(
+            "{}   → Running: php artisan {}",
+            "  ".dimmed(),
+            command.cyan()
+        );
 
         let output = Command::new("php")
             .arg("artisan")
@@ -891,7 +920,12 @@ impl ReleaseManager {
     pub async fn create_release(&self, version: &str, message: Option<&str>) -> Result<()> {
         println!(
             "{}",
-            format!("🚀 Creating release {} for {:?}...", version, self.project_config.framework).cyan().bold()
+            format!(
+                "🚀 Creating release {} for {:?}...",
+                version, self.project_config.framework
+            )
+            .cyan()
+            .bold()
         );
         println!("{}", "═".repeat(50).dimmed());
 
@@ -1065,11 +1099,7 @@ pub async fn create_release_interactive() -> Result<()> {
         manager.project_config.framework
     );
     if let Some(pm) = &manager.project_config.package_manager {
-        println!(
-            "{}   📦 Package Manager: {}",
-            "  ".dimmed(),
-            pm.cyan()
-        );
+        println!("{}   📦 Package Manager: {}", "  ".dimmed(), pm.cyan());
     }
     println!();
 
