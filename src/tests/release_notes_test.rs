@@ -120,18 +120,16 @@ fn test_categorize_commits() {
 // Simplified test that definitely works
 #[test]
 fn test_categorize_commits_simple() {
-    let commits = vec![
-        CommitInfo {
-            hash: "abc123".to_string(),
-            message: "feat: add new feature".to_string(),
-            author_name: "John Doe".to_string(),
-            author_email: "john@example.com".to_string(),
-            timestamp: 1640995200,
-        },
-    ];
+    let commits = vec![CommitInfo {
+        hash: "abc123".to_string(),
+        message: "feat: add new feature".to_string(),
+        author_name: "John Doe".to_string(),
+        author_email: "john@example.com".to_string(),
+        timestamp: 1640995200,
+    }];
 
     let categorized = categorize_commits(&commits);
-    
+
     // This should definitely work
     assert!(!categorized.features.is_empty() || !categorized.others.is_empty());
 }
