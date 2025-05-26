@@ -1,6 +1,5 @@
 # 🚀 NitroKit Terminal
 
-[![Rust CI](https://github.com/mustafagenc/nitrokit-terminal/workflows/Rust%20CI/badge.svg)](https://github.com/mustafagenc/nitrokit-terminal/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Rust Version](https://img.shields.io/badge/rust-1.70%2B-blue.svg)](https://www.rust-lang.org)
 
