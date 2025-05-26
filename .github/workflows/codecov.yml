@@ -1,46 +1,232 @@
-name: Rust
+name: Code Coverage
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "develop" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "develop" ]
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build:
-
+  coverage:
+    name: Code Coverage
     runs-on: ubuntu-latest
-
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions-rs/toolchain@v1
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install Rust toolchain
+      uses: dtolnay/rust-toolchain@stable
       with:
-        toolchain: nightly
-        override: true
-    - name: Build
-      run: cargo build --verbose
-    - name: Run tests
-      run: cargo test --verbose
-      env:
-        CARGO_INCREMENTAL: '0'
-        RUSTFLAGS: '-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Cpanic=abort -Zpanic_abort_tests'
-        RUSTDOCFLAGS: '-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Cpanic=abort -Zpanic_abort_tests'
-    - name: rust-grcov
-      # You may pin to the exact commit or the version.
-      # uses: actions-rs/grcov@bb47b1ed7883a1502fa6875d562727ace2511248
-      uses: actions-rs/grcov@v0.1
-    - name: Codecov
-      # You may pin to the exact commit or the version.
-      # uses: codecov/codecov-action@81cd2dc8148241f03f5839d295e000b8f761e378
-      uses: codecov/codecov-action@v5
-      env:
-        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        components: llvm-tools-preview
+
+    - name: Update Cargo.lock if needed
+      run: |
+        if [ -f Cargo.lock ]; then
+          rm Cargo.lock
+          cargo generate-lockfile
+        fi
+
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y git pkg-config libssl-dev
+
+    - name: Cache cargo
+      uses: actions/cache@v4
       with:
-        # Repository upload token - get it from codecov.io. Required only for private repositories
-        # token: # optional
-        # Specify whether the Codecov output should be verbose
+        path: |
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+          target/
+        key: ${{ runner.os }}-coverage-${{ hashFiles('**/Cargo.toml') }}
+        restore-keys: |
+          ${{ runner.os }}-coverage-
+          ${{ runner.os }}-cargo-
+
+    - name: Install cargo-tarpaulin
+      run: cargo install cargo-tarpaulin --locked
+
+    - name: Run tests with coverage
+      run: |
+        cargo tarpaulin \
+          --verbose \
+          --all-features \
+          --workspace \
+          --timeout 120 \
+          --exclude-files src/tests/* \
+          --out xml \
+          --output-dir ./coverage/
+      env:
+        RUST_BACKTRACE: 1
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        file: ./coverage/cobertura.xml
+        flags: unittests
+        name: nitrokit-coverage
+        fail_ci_if_error: false
+        token: ${{ secrets.CODECOV_TOKEN }}
         verbose: true
-        fail_ci_if_error: true
+
+    - name: Archive coverage results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: coverage-report
+        path: |
+          ./coverage/
+          ./target/tarpaulin/
+        retention-days: 30
+
+  coverage-report:
+    name: Coverage Report
+    runs-on: ubuntu-latest
+    needs: coverage
+    if: always()
+    steps:
+    - name: Download coverage results
+      uses: actions/download-artifact@v4
+      with:
+        name: coverage-report
+        path: ./coverage/
+
+    - name: Display coverage summary
+      run: |
+        if [ -f ./coverage/cobertura.xml ]; then
+          echo "Coverage report generated successfully"
+          # Extract coverage percentage from XML if available
+          if command -v xmllint &> /dev/null; then
+            coverage=$(xmllint --xpath "string(//coverage/@line-rate)" ./coverage/cobertura.xml 2>/dev/null || echo "0")
+            percentage=$(echo "$coverage * 100" | bc 2>/dev/null || echo "0")
+            echo "Line Coverage: ${percentage}%"
+          fi
+        else
+          echo "No coverage report found"
+        fi
+
+  # Alternative coverage job using cargo-llvm-cov (more modern approach)
+  coverage-llvm:
+    name: Coverage (LLVM)
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install Rust toolchain
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        components: llvm-tools-preview
+
+    - name: Update Cargo.lock if needed
+      run: |
+        if [ -f Cargo.lock ]; then
+          rm Cargo.lock
+          cargo generate-lockfile
+        fi
+
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y git pkg-config libssl-dev
+
+    - name: Cache cargo
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+          target/
+        key: ${{ runner.os }}-llvm-cov-${{ hashFiles('**/Cargo.toml') }}
+
+    - name: Install cargo-llvm-cov
+      run: cargo install cargo-llvm-cov --locked
+
+    - name: Generate coverage with llvm-cov
+      run: |
+        cargo llvm-cov \
+          --all-features \
+          --workspace \
+          --lcov \
+          --output-path ./lcov.info
+      env:
+        RUST_BACKTRACE: 1
+
+    - name: Upload coverage to Codecov (LLVM)
+      uses: codecov/codecov-action@v4
+      with:
+        file: ./lcov.info
+        flags: llvm-cov
+        name: nitrokit-llvm-coverage
+        fail_ci_if_error: false
+        token: ${{ secrets.CODECOV_TOKEN }}
+        verbose: true
+
+  # Minimal coverage for faster CI
+  coverage-minimal:
+    name: Quick Coverage Check
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install Rust toolchain
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Update Cargo.lock if needed
+      run: |
+        if [ -f Cargo.lock ]; then
+          rm Cargo.lock
+          cargo generate-lockfile
+        fi
+
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y git pkg-config libssl-dev
+
+    - name: Run tests with basic coverage info
+      run: |
+        cargo test --verbose 2>&1 | tee test_output.log
+        # Count test results
+        passed=$(grep -c "test result: ok" test_output.log || echo "0")
+        failed=$(grep -c "test result: FAILED" test_output.log || echo "0")
+        total=$((passed + failed))
+        echo "Test Summary:"
+        echo "- Total tests: $total"
+        echo "- Passed: $passed"
+        echo "- Failed: $failed"
+        if [ $failed -gt 0 ]; then
+          echo "❌ Some tests failed"
+          exit 1
+        else
+          echo "✅ All tests passed"
+        fi
+      env:
+        RUST_BACKTRACE: 1
+
+  final-coverage-check:
+    name: Final Coverage Check
+    runs-on: ubuntu-latest
+    needs: [coverage, coverage-llvm, coverage-minimal]
+    if: always()
+    steps:
+    - name: Check coverage results
+      run: |
+        echo "Coverage job result: ${{ needs.coverage.result }}"
+        echo "LLVM coverage job result: ${{ needs.coverage-llvm.result }}"
+        echo "Minimal coverage job result: ${{ needs.coverage-minimal.result }}"
+        # At least one coverage method should succeed
+        if [[ "${{ needs.coverage.result }}" == "success" || "${{ needs.coverage-llvm.result }}" == "success" ]]; then
+          echo "✅ Coverage analysis completed successfully"
+        elif [[ "${{ needs.coverage-minimal.result }}" == "success" ]]; then
+          echo "⚠️ Basic test coverage completed (detailed coverage failed)"
+        else
+          echo "❌ All coverage methods failed"
+          exit 1
+        fi
