@@ -37,41 +37,14 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
+          targets: ${{ matrix.target }}
 
-      - name: Install dependencies (Linux)
+      # RustTLS kullandığımız için OpenSSL kurulumuna gerek yok
+      - name: Install build dependencies (Linux)
         if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get update
-          sudo apt-get install -y pkg-config libssl-dev
-
-      - name: Install dependencies (macOS)
-        if: startsWith(matrix.os, 'macos')
-        run: |
-          # macOS için OpenSSL setup
-          if [[ "${{ matrix.os }}" == "macos-13" ]]; then
-            # Intel Mac için
-            brew install openssl@3
-            echo "OPENSSL_DIR=/usr/local/opt/openssl@3" >> $GITHUB_ENV
-            echo "PKG_CONFIG_PATH=/usr/local/opt/openssl@3/lib/pkgconfig" >> $GITHUB_ENV
-          else
-            # Apple Silicon Mac için
-            brew install openssl@3
-            echo "OPENSSL_DIR=/opt/homebrew/opt/openssl@3" >> $GITHUB_ENV
-            echo "PKG_CONFIG_PATH=/opt/homebrew/opt/openssl@3/lib/pkgconfig" >> $GITHUB_ENV
-          fi
-
-      - name: Set OpenSSL environment variables (macOS)
-        if: startsWith(matrix.os, 'macos')
-        run: |
-          if [[ "${{ matrix.os }}" == "macos-13" ]]; then
-            # Intel Mac
-            echo "OPENSSL_INCLUDE_DIR=/usr/local/opt/openssl@3/include" >> $GITHUB_ENV
-            echo "OPENSSL_LIB_DIR=/usr/local/opt/openssl@3/lib" >> $GITHUB_ENV
-          else
-            # Apple Silicon Mac
-            echo "OPENSSL_INCLUDE_DIR=/opt/homebrew/opt/openssl@3/include" >> $GITHUB_ENV
-            echo "OPENSSL_LIB_DIR=/opt/homebrew/opt/openssl@3/lib" >> $GITHUB_ENV
-          fi
+          sudo apt-get install -y pkg-config
 
       - name: Cache cargo dependencies
         uses: actions/cache@v4
@@ -105,6 +78,8 @@ jobs:
         with:
           name: ${{ matrix.asset_name }}
           path: ${{ matrix.asset_name }}
+          if-no-files-found: error
+          retention-days: 1
 
   release:
     name: Create Release
@@ -154,6 +129,38 @@ jobs:
             echo "| macOS (Intel) | [\`nitrokit-macos-x86_64\`](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/nitrokit-macos-x86_64) |"
             echo "| macOS (Apple Silicon) | [\`nitrokit-macos-arm64\`](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/nitrokit-macos-arm64) |"
             echo "| Linux (x64) | [\`nitrokit-linux-x86_64\`](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/nitrokit-linux-x86_64) |"
+            echo ""
+            echo "## 🛠️ Installation"
+            echo ""
+            echo "### Quick Install (Unix/Linux/macOS)"
+            echo "\`\`\`bash"
+            echo "# Download and install"
+            echo "curl -L https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/nitrokit-\$(uname -s | tr '[:upper:]' '[:lower:]')-\$(uname -m) -o nitrokit"
+            echo "chmod +x nitrokit"
+            echo "sudo mv nitrokit /usr/local/bin/"
+            echo "\`\`\`"
+            echo ""
+            echo "### Windows"
+            echo "\`\`\`powershell"
+            echo "# Download nitrokit-windows-x86_64.exe and add to PATH"
+            echo "\`\`\`"
+            echo ""
+            echo "### Using Cargo"
+            echo "\`\`\`bash"
+            echo "cargo install nitrokit"
+            echo "\`\`\`"
+            echo ""
+            echo "## 🚀 Usage"
+            echo ""
+            echo "\`\`\`bash"
+            echo "# Interactive mode"
+            echo "nitrokit"
+            echo ""
+            echo "# Direct commands"
+            echo "nitrokit release-notes"
+            echo "nitrokit version patch"
+            echo "nitrokit sync-translations"
+            echo "\`\`\`"
             echo "EOF"
           } >> $GITHUB_OUTPUT
 
@@ -163,10 +170,13 @@ jobs:
           tag_name: ${{ github.ref_name }}
           name: "🚀 NitroKit ${{ github.ref_name }}"
           body: ${{ steps.release_notes.outputs.RELEASE_NOTES }}
+          draft: false
+          prerelease: ${{ contains(github.ref_name, 'alpha') || contains(github.ref_name, 'beta') || contains(github.ref, 'rc') }}
           files: |
             nitrokit-linux-x86_64
             nitrokit-windows-x86_64.exe
             nitrokit-macos-x86_64
             nitrokit-macos-arm64
+          generate_release_notes: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

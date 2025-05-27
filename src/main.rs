@@ -46,6 +46,11 @@ fn print_banner() {
         "{}",
         "    Developed by Mustafa Genc <eposta@mustafagenc.info>".dimmed()
     );
+    println!(
+        "{}",
+        "    https://nitrokit.tr".dimmed()
+    );
+    
     println!();
 }
 
