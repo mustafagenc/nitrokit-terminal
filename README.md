@@ -56,29 +56,10 @@ NitroKit is a powerful terminal application written in Rust that provides compre
 
 ## 🛠️ Installation
 
-### Quick Install
-
-#### Using Cargo (Recommended)
-
-```bash
-cargo install nitrokit
-```
-
-#### Download Binary
-
-Download the latest binary from [Releases](https://github.com/mustafagenc/nitrokit-terminal/releases):
-
-| Platform | Download |
-|----------|----------|
-| Windows (x64) | [`nitrokit-windows-x86_64.exe`](https://github.com/mustafagenc/nitrokit-terminal/releases/latest/download/nitrokit-windows-x86_64.exe) |
-| macOS (Intel) | [`nitrokit-macos-x86_64`](https://github.com/mustafagenc/nitrokit-terminal/releases/latest/download/nitrokit-macos-x86_64) |
-| macOS (Apple Silicon) | [`nitrokit-macos-arm64`](https://github.com/mustafagenc/nitrokit-terminal/releases/latest/download/nitrokit-macos-arm64) |
-| Linux (x64) | [`nitrokit-linux-x86_64`](https://github.com/mustafagenc/nitrokit-terminal/releases/latest/download/nitrokit-linux-x86_64) |
-
 #### Install Script (Unix/Linux/macOS)
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/mustafagenc/nitrokit-terminal/main/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/mustafagenc/nitrokit-terminal/refs/heads/main/scripts/install.sh | bash
 ```
 
 #### Manual Installation
@@ -89,14 +70,6 @@ wget https://github.com/mustafagenc/nitrokit-terminal/releases/latest/download/n
 chmod +x nitrokit-linux-x86_64
 sudo mv nitrokit-linux-x86_64 /usr/local/bin/nitrokit
 ```
-
-### Prerequisites
-
-- **Git** (for release notes generation)
-- **Package Managers** (optional, based on your project type):
-  - Node.js with npm/yarn/pnpm
-  - Python with pip
-  - PHP with Composer
 
 ## 🚀 Usage
 
