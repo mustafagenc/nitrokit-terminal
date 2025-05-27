@@ -293,7 +293,7 @@ impl TranslationSync {
         );
 
         // Get all translation paths
-        let all_paths = self.extract_all_paths(&source_json, "");
+        let all_paths = extract_all_paths(&source_json, "");
         println!(
             "{}",
             format!("🔍 Found {} translation keys", all_paths.len()).blue()
@@ -497,31 +497,6 @@ impl TranslationSync {
         Ok(results)
     }
 
-    fn extract_all_paths(&self, value: &Value, prefix: &str) -> Vec<String> {
-        let mut paths = Vec::new();
-
-        match value {
-            Value::Object(map) => {
-                for (key, val) in map {
-                    let current_path = if prefix.is_empty() {
-                        key.clone()
-                    } else {
-                        format!("{}.{}", prefix, key)
-                    };
-
-                    if val.is_string() {
-                        paths.push(current_path);
-                    } else {
-                        paths.extend(self.extract_all_paths(val, &current_path));
-                    }
-                }
-            }
-            _ => {}
-        }
-
-        paths
-    }
-
     fn find_missing_paths(&self, target: &Value, all_paths: &[String]) -> Vec<String> {
         let mut missing = Vec::new();
 
@@ -578,6 +553,28 @@ impl TranslationSync {
 
         Err(anyhow!("Failed to set nested value"))
     }
+}
+
+fn extract_all_paths(value: &Value, prefix: &str) -> Vec<String> {
+    let mut paths = Vec::new();
+
+    if let Value::Object(map) = value {
+        for (key, val) in map {
+            let current_path = if prefix.is_empty() {
+                key.clone()
+            } else {
+                format!("{}.{}", prefix, key)
+            };
+
+            if val.is_string() {
+                paths.push(current_path);
+            } else {
+                paths.extend(extract_all_paths(val, &current_path));
+            }
+        }
+    }
+
+    paths
 }
 
 pub async fn sync_translations_interactive() -> Result<()> {

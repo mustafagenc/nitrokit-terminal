@@ -297,7 +297,7 @@ impl ConfigManager {
     }
 
     async fn prompt_for_api_key(&self, current: Option<&str>) -> Result<Option<String>> {
-        if let Some(env_key) = std::env::var("GEMINI_API_KEY").ok() {
+        if let Ok(env_key) = std::env::var("GEMINI_API_KEY") {
             if !env_key.is_empty() {
                 println!("{}", "✅ Using GEMINI_API_KEY from environment".green());
                 return Ok(Some(env_key));
@@ -334,14 +334,12 @@ impl ConfigManager {
     async fn prompt_for_model(&self, current: &str) -> Result<String> {
         println!("\n{}", "🤖 Available Gemini Models:".yellow());
         println!(
-            "  {} {}",
+            "    {{}} gemini-1.5-flash (fast, cost-effective) {}",
             "1.".dimmed(),
-            "gemini-1.5-flash (fast, cost-effective)"
         );
         println!(
-            "  {} {}",
+            "    {{}} gemini-1.5-pro (more accurate, slower) {}",
             "2.".dimmed(),
-            "gemini-1.5-pro (more accurate, slower)"
         );
 
         print!("{}", format!("Model [current: {}]: ", current).cyan());

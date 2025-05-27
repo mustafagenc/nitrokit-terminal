@@ -159,17 +159,12 @@ fn show_update_available(release: &GitHubRelease, current_version: &str) {
     );
     println!();
     println!("{}", "📦 Update options:".yellow().bold());
-    println!("  {} {}", "•".dimmed(), "Download from GitHub releases");
+    println!("  {} Download from GitHub releases", "•".dimmed());
     println!(
-        "  {} {}",
-        "•".dimmed(),
-        "Build from source: git pull && cargo build --release"
+        "  {}   {{}} Build from source: git pull && cargo build --release",
+        "•".dimmed()
     );
-    println!(
-        "  {} {}",
-        "•".dimmed(),
-        "Use package manager (if available)"
-    );
+    println!("  {} Use package manager (if available)", "•".dimmed());
     println!();
     println!(
         "{}",

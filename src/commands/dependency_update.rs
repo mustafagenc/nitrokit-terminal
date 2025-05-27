@@ -249,9 +249,9 @@ fn update_yarn_dependencies() {
 
         log_error("yarn not found in PATH. Please ensure yarn is installed and available in PATH.");
         log_info("You can install yarn via:");
-        println!("  {} {}", "npm:".cyan(), "npm install -g yarn");
-        println!("  {} {}", "chocolatey:".cyan(), "choco install yarn");
-        println!("  {} {}", "scoop:".cyan(), "scoop install yarn");
+        println!("  {} npm install -g yarn", "npm:".cyan());
+        println!("  {} choco install yarn", "chocolatey:".cyan());
+        println!("  {} scoop install yarn", "scoop:".cyan());
         return;
     }
 
@@ -265,13 +265,9 @@ fn update_yarn_dependencies() {
 
     log_info(&format!("Using yarn command: {}", yarn_cmd.green()));
 
-    // Version check
-    match Command::new(yarn_cmd).arg("--version").output() {
-        Ok(output) => {
-            let version = String::from_utf8_lossy(&output.stdout);
-            log_info(&format!("Yarn version: {}", version.trim().cyan()));
-        }
-        Err(_) => {}
+    if let Ok(output) = Command::new(yarn_cmd).arg("--version").output() {
+        let version = String::from_utf8_lossy(&output.stdout);
+        log_info(&format!("Yarn version: {}", version.trim().cyan()));
     }
 
     log_info("Running yarn upgrade...");
@@ -398,7 +394,7 @@ fn update_npm_dependencies() {
         "npm"
     };
 
-    if !Command::new(npm_cmd).arg("--version").output().is_ok() {
+    if Command::new(npm_cmd).arg("--version").output().is_err() {
         log_warning("npm not found. Skipping npm update.");
         return;
     }
@@ -472,7 +468,7 @@ fn update_pnpm_dependencies() {
         "pnpm"
     };
 
-    if !Command::new(pnpm_cmd).arg("--version").output().is_ok() {
+    if Command::new(pnpm_cmd).arg("--version").output().is_err() {
         log_warning("pnpm not found. Skipping pnpm update.");
         return;
     }

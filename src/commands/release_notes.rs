@@ -1,10 +1,10 @@
 use crate::utils::{get_repository, log_error, log_info, log_success, write_string_to_file};
+use anyhow::Result;
 use chrono::TimeZone;
 use colored::*;
 use git2::Repository;
 use std::collections::HashMap;
 use std::process::Command;
-use anyhow::Result; 
 
 pub fn generate_release_notes() {
     log_info("Starting release notes generation...");
@@ -155,7 +155,7 @@ pub fn get_current_commit_as_tag(repo: &Repository) -> (String, Option<String>) 
                     &branch_name,
                     &date,
                     &short_hash,
-                    &commit.message().unwrap_or(""),
+                    commit.message().unwrap_or("").to_string().as_str(),
                 );
 
                 log_info(&format!("Generated tag from current commit: {}", auto_tag));
@@ -275,13 +275,11 @@ pub fn get_all_tags(repo: &Repository) -> Result<Vec<String>, git2::Error> {
     // Also try to get lightweight tags if no annotated tags found
     if tags.is_empty() {
         if let Ok(references) = repo.references() {
-            for reference in references {
-                if let Ok(reference) = reference {
-                    if let Some(name) = reference.name() {
-                        if name.starts_with("refs/tags/") {
-                            let tag_name = name.strip_prefix("refs/tags/").unwrap();
-                            tags.push(tag_name.to_string());
-                        }
+            for reference in references.flatten() {
+                if let Some(name) = reference.name() {
+                    if name.starts_with("refs/tags/") {
+                        let tag_name = name.strip_prefix("refs/tags/").unwrap();
+                        tags.push(tag_name.to_string());
                     }
                 }
             }
@@ -431,16 +429,14 @@ fn get_repository_info(repo: &Repository) -> RepositoryInfo {
 
     // Try to get remote URL
     if let Ok(remotes) = repo.remotes() {
-        for remote_name in remotes.iter() {
-            if let Some(remote_name) = remote_name {
-                if let Ok(remote) = repo.find_remote(remote_name) {
-                    if let Some(url) = remote.url() {
-                        repo_info.url = url.to_string();
+        for remote_name in remotes.iter().flatten() {
+            if let Ok(remote) = repo.find_remote(remote_name) {
+                if let Some(url) = remote.url() {
+                    repo_info.url = url.to_string();
 
-                        // Parse URL to extract owner and repo name
-                        parse_git_url(&mut repo_info, url);
-                        break;
-                    }
+                    // Parse URL to extract owner and repo name
+                    parse_git_url(&mut repo_info, url);
+                    break;
                 }
             }
         }
@@ -489,7 +485,7 @@ fn parse_git_url(repo_info: &mut RepositoryInfo, url: &str) {
     // Generic git repository
     else {
         // Try to extract from any git URL pattern
-        if let Some(repo_name) = clean_url.split('/').last() {
+        if let Some(repo_name) = clean_url.split('/').next_back() {
             repo_info.name = repo_name.to_string();
         }
         if let Some(owner) = clean_url.split('/').nth_back(1) {
@@ -605,23 +601,9 @@ pub fn is_prerelease(tag: &str) -> bool {
 }
 
 pub fn generate_compare_url(repo_info: &RepositoryInfo, from_tag: &str, to_tag: &str) -> String {
-    if repo_info.is_github {
+    if repo_info.is_github || repo_info.is_gitlab || repo_info.is_bitbucket {
         format!(
             "{}/compare/{}...{}",
-            repo_info.url.trim_end_matches(".git"),
-            from_tag,
-            to_tag
-        )
-    } else if repo_info.is_gitlab {
-        format!(
-            "{}/compare/{}...{}",
-            repo_info.url.trim_end_matches(".git"),
-            from_tag,
-            to_tag
-        )
-    } else if repo_info.is_bitbucket {
-        format!(
-            "{}/compare/{}..{}",
             repo_info.url.trim_end_matches(".git"),
             from_tag,
             to_tag
@@ -636,39 +618,15 @@ pub fn generate_compare_url(repo_info: &RepositoryInfo, from_tag: &str, to_tag: 
 }
 
 pub fn generate_commits_url(repo_info: &RepositoryInfo, tag: &str) -> String {
-    if repo_info.is_github {
-        format!("{}/commits/{}", repo_info.url.trim_end_matches(".git"), tag)
-    } else if repo_info.is_gitlab {
-        format!("{}/commits/{}", repo_info.url.trim_end_matches(".git"), tag)
-    } else if repo_info.is_bitbucket {
-        format!("{}/commits/{}", repo_info.url.trim_end_matches(".git"), tag)
-    } else {
-        format!("{}/commits/{}", repo_info.url.trim_end_matches(".git"), tag)
-    }
+    format!("{}/commits/{}", repo_info.url.trim_end_matches(".git"), tag)
 }
 
 pub fn generate_issues_url(repo_info: &RepositoryInfo) -> String {
-    if repo_info.is_github {
-        format!("{}/issues", repo_info.url.trim_end_matches(".git"))
-    } else if repo_info.is_gitlab {
-        format!("{}/issues", repo_info.url.trim_end_matches(".git"))
-    } else if repo_info.is_bitbucket {
-        format!("{}/issues", repo_info.url.trim_end_matches(".git"))
-    } else {
-        format!("{}/issues", repo_info.url.trim_end_matches(".git"))
-    }
+    format!("{}/issues", repo_info.url.trim_end_matches(".git"))
 }
 
 fn generate_new_issue_url(repo_info: &RepositoryInfo) -> String {
-    if repo_info.is_github {
-        format!("{}/issues/new", repo_info.url.trim_end_matches(".git"))
-    } else if repo_info.is_gitlab {
-        format!("{}/issues/new", repo_info.url.trim_end_matches(".git"))
-    } else if repo_info.is_bitbucket {
-        format!("{}/issues/new", repo_info.url.trim_end_matches(".git"))
-    } else {
-        format!("{}/issues/new", repo_info.url.trim_end_matches(".git"))
-    }
+    format!("{}/issues/new", repo_info.url.trim_end_matches(".git"))
 }
 
 pub fn get_contributors_with_stats(commits: &[CommitInfo]) -> Vec<(String, String, usize)> {
@@ -707,7 +665,7 @@ fn format_github_username_with_stats(
     if email.contains("@users.noreply.github.com") && repo_info.is_github {
         // GitHub no-reply email format - fix temporary value issue
         let temp_email = email.replace("@users.noreply.github.com", "");
-        let github_user = temp_email.split('+').last().unwrap_or(email);
+        let github_user = temp_email.split('+').next_back().unwrap_or(email);
         format!(
             "- [@{}](https://github.com/{}) ({}) - {}",
             github_user, github_user, name, commits_text
@@ -760,7 +718,7 @@ fn generate_comprehensive_release_notes(
             newest_commit.format_date()
         ));
     }
-    output.push_str("\n");
+    output.push('\n');
 
     // Pre-release warning
     if is_prerelease(current_tag) {
@@ -777,7 +735,7 @@ fn generate_comprehensive_release_notes(
         for change in &categorized.breaking_changes {
             output.push_str(&format!("- {}\n", change));
         }
-        output.push_str("\n");
+        output.push('\n');
     }
 
     // Security updates
@@ -787,7 +745,7 @@ fn generate_comprehensive_release_notes(
         for security in &categorized.security {
             output.push_str(&format!("- {}\n", security));
         }
-        output.push_str("\n");
+        output.push('\n');
     }
 
     // Features
@@ -796,7 +754,7 @@ fn generate_comprehensive_release_notes(
         for feature in &categorized.features {
             output.push_str(&format!("- {}\n", feature));
         }
-        output.push_str("\n");
+        output.push('\n');
     }
 
     // Bug fixes
@@ -805,7 +763,7 @@ fn generate_comprehensive_release_notes(
         for fix in &categorized.fixes {
             output.push_str(&format!("- {}\n", fix));
         }
-        output.push_str("\n");
+        output.push('\n');
     }
 
     // Improvements
@@ -814,7 +772,7 @@ fn generate_comprehensive_release_notes(
         for improvement in &categorized.improvements {
             output.push_str(&format!("- {}\n", improvement));
         }
-        output.push_str("\n");
+        output.push('\n');
     }
 
     // Translations
@@ -823,7 +781,7 @@ fn generate_comprehensive_release_notes(
         for translation in &categorized.translations {
             output.push_str(&format!("- {}\n", translation));
         }
-        output.push_str("\n");
+        output.push('\n');
     }
 
     // Documentation
@@ -832,7 +790,7 @@ fn generate_comprehensive_release_notes(
         for doc in &categorized.docs {
             output.push_str(&format!("- {}\n", doc));
         }
-        output.push_str("\n");
+        output.push('\n');
     }
 
     // Dependencies
@@ -841,7 +799,7 @@ fn generate_comprehensive_release_notes(
         for dep in &categorized.deps {
             output.push_str(&format!("- {}\n", dep));
         }
-        output.push_str("\n");
+        output.push('\n');
     }
 
     // Other changes (if any significant ones exist)
@@ -850,7 +808,7 @@ fn generate_comprehensive_release_notes(
         for other in &categorized.other {
             output.push_str(&format!("- {}\n", other));
         }
-        output.push_str("\n");
+        output.push('\n');
     }
 
     // Contributors with commit stats
@@ -863,7 +821,7 @@ fn generate_comprehensive_release_notes(
                 format_github_username_with_stats(&email, &name, commit_count, repo_info);
             output.push_str(&format!("{}\n", formatted_contributor));
         }
-        output.push_str("\n");
+        output.push('\n');
     }
 
     // Installation instructions
@@ -940,7 +898,7 @@ fn generate_comprehensive_release_notes(
                 short_message
             ));
         }
-        output.push_str("\n");
+        output.push('\n');
     }
 
     // Full changelog
@@ -956,7 +914,7 @@ fn generate_comprehensive_release_notes(
             generate_commits_url(repo_info, current_tag)
         ));
     }
-    output.push_str("\n");
+    output.push('\n');
 
     // Additional information
     output.push_str("---\n\n");
@@ -977,7 +935,7 @@ fn generate_comprehensive_release_notes(
         "- 🐛 **Report Issues**: [Issues]({})\n",
         generate_issues_url(repo_info)
     ));
-    output.push_str("\n");
+    output.push('\n');
 
     output.push_str("### 🆘 Getting Help\n\n");
     output.push_str("If you encounter any issues with this release:\n\n");
@@ -990,7 +948,7 @@ fn generate_comprehensive_release_notes(
         "3. Create a [new issue]({}) with detailed information\n",
         generate_new_issue_url(repo_info)
     ));
-    output.push_str("\n");
+    output.push('\n');
 
     output.push_str("---\n\n");
     output.push_str(&format!("**Enjoy building with {}! 🚀**\n", repo_info.name));
@@ -998,21 +956,24 @@ fn generate_comprehensive_release_notes(
     output
 }
 
-pub fn generate_release_notes_for_version(from_tag: Option<&str>, to_tag: Option<&str>) -> Result<String> {
+pub fn generate_release_notes_for_version(
+    from_tag: Option<&str>,
+    to_tag: Option<&str>,
+) -> Result<String> {
     let range = match (from_tag, to_tag) {
         (Some(from), Some(to)) => format!("{}..{}", from, to),
         (Some(from), None) => format!("{}..HEAD", from),
         (None, Some(to)) => format!("HEAD..{}", to),
         (None, None) => "HEAD".to_string(),
     };
-    
+
     let output = Command::new("git")
         .args(["log", &range, "--oneline", "--pretty=format:- %s"])
         .output()?;
-    
+
     if !output.status.success() {
         return Err(anyhow::anyhow!("Failed to generate git log"));
     }
-    
+
     Ok(String::from_utf8_lossy(&output.stdout).to_string())
 }

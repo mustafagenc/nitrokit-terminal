@@ -25,12 +25,12 @@ fn print_banner() {
         extern "system" {
             fn SetConsoleTitleW(title: *const u16) -> i32;
         }
-        
+
         // UTF-16 string oluştur
         let title = "🚀 Nitrokit Terminal Tool\0"
             .encode_utf16()
             .collect::<Vec<u16>>();
-        
+
         unsafe {
             SetConsoleTitleW(title.as_ptr());
         }
@@ -49,48 +49,30 @@ fn print_banner() {
         "{}",
         "    Developed by Mustafa Genc <eposta@mustafagenc.info>".dimmed()
     );
-    println!(
-        "{}",
-        "    https://nitrokit.tr".dimmed()
-    );
-    
+    println!("{}", "    https://nitrokit.tr".dimmed());
+
     println!();
 }
 
 fn show_menu() {
     println!("{}", "Available commands:".yellow().bold());
+    println!("  {} Create a new release", "1. 🚀 create-release".green());
     println!(
-        "  {} {}",
-        "1. 🚀 create-release".green(),
-        "Create a new release"
+        "  {} Generate release notes from git commits",
+        "2. 📦 release-notes".green()
     );
     println!(
-        "  {} {}",
-        "2. 📦 release-notes".green(),
-        "Generate release notes from git commits"
+        "  {} Analyze and update project dependencies",
+        "3. 📝 update-dependencies".green()
     );
     println!(
-        "  {} {}",
-        "3. 📝 update-dependencies".green(),
-        "Analyze and update project dependencies"
+        "  {} Sync translations using Gemini AI",
+        "4. 🌍 sync-translations".green()
     );
-    println!(
-        "  {} {}",
-        "4. 🌍 sync-translations".green(),
-        "Sync translations using Gemini AI"
-    );
-    println!(
-        "  {} {}",
-        "5. ⚙️ config".blue(),
-        "Manage configuration settings"
-    );
-    println!(
-        "  {} {}",
-        "6. 🏷️ version".blue(),
-        "Manage project versioning"
-    );
-    println!("  {} {}", "7. ❓ help".blue(), "Show this help menu");
-    println!("  {} {}", "8. 🚪 exit".red(), "Exit Nitrokit");
+    println!("  {} Manage configuration settings", "5. ⚙️ config".blue());
+    println!("  {} Manage project versioning", "6. 🏷️ version".blue());
+    println!("  {} Show this help menu", "7. ❓ help".blue());
+    println!("  {} Exit Nitrokit", "8. 🚪 exit".red());
     println!();
 }
 
@@ -139,14 +121,14 @@ async fn main() {
                 .subcommand(Command::new("minor").about("Bump minor version"))
                 .subcommand(Command::new("major").about("Bump major version"))
                 .subcommand(Command::new("show").about("Show current version"))
-                .subcommand(Command::new("history").about("Show version history"))
+                .subcommand(Command::new("history").about("Show version history")),
         )
         .subcommand(
             Command::new("config")
                 .about("Manage configuration settings")
                 .subcommand(Command::new("show").about("Show current configuration"))
                 .subcommand(Command::new("setup").about("Setup configuration"))
-                .subcommand(Command::new("reset").about("Reset configuration"))
+                .subcommand(Command::new("reset").about("Reset configuration")),
         );
 
     let matches = app.try_get_matches();
@@ -156,15 +138,16 @@ async fn main() {
             Some(("create-release", sub_matches)) => {
                 if let Some(version) = sub_matches.get_one::<String>("version") {
                     let message = sub_matches.get_one::<String>("message").map(|s| s.as_str());
-                    if let Err(e) = commands::create_release::create_release_with_args(version, message).await {
+                    if let Err(e) =
+                        commands::create_release::create_release_with_args(version, message).await
+                    {
                         eprintln!("{}", format!("❌ Release creation failed: {}", e).red());
                         std::process::exit(1);
                     }
-                } else {
-                    if let Err(e) = commands::create_release::create_release_interactive().await {
-                        eprintln!("{}", format!("❌ Release creation failed: {}", e).red());
-                        std::process::exit(1);
-                    }
+                } else if let Err(e) = commands::create_release::create_release_interactive().await
+                {
+                    eprintln!("{}", format!("❌ Release creation failed: {}", e).red());
+                    std::process::exit(1);
                 }
             }
             Some(("release-notes", _)) => {
@@ -182,71 +165,85 @@ async fn main() {
                     std::process::exit(1);
                 }
             }
-            Some(("version", sub_matches)) => {
-                match sub_matches.subcommand() {
-                    Some(("patch", _)) => {
-                        println!("{}", "🔄 Bumping patch version...".yellow());
-                        if let Err(e) = commands::version_management::bump_and_release("patch", None).await {
-                            eprintln!("{}", format!("❌ Failed to bump patch version: {}", e).red());
-                            std::process::exit(1);
-                        }
-                    }
-                    Some(("minor", _)) => {
-                        println!("{}", "🔄 Bumping minor version...".yellow());
-                        if let Err(e) = commands::version_management::bump_and_release("minor", None).await {
-                            eprintln!("{}", format!("❌ Failed to bump minor version: {}", e).red());
-                            std::process::exit(1);
-                        }
-                    }
-                    Some(("major", _)) => {
-                        println!("{}", "🔄 Bumping major version...".yellow());
-                        if let Err(e) = commands::version_management::bump_and_release("major", None).await {
-                            eprintln!("{}", format!("❌ Failed to bump major version: {}", e).red());
-                            std::process::exit(1);
-                        }
-                    }
-                    Some(("show", _)) => {
-                        println!("{}", format!("Current version: v{}", VERSION).cyan().bold());
-                    }
-                    Some(("history", _)) => {
-                        if let Err(e) = commands::version_management::show_version_history().await {
-                            eprintln!("{}", format!("❌ Failed to show version history: {}", e).red());
-                            std::process::exit(1);
-                        }
-                    }
-                    _ => {
-                        println!("{}", format!("Current version: v{}", VERSION).cyan().bold());
+            Some(("version", sub_matches)) => match sub_matches.subcommand() {
+                Some(("patch", _)) => {
+                    println!("{}", "🔄 Bumping patch version...".yellow());
+                    if let Err(e) =
+                        commands::version_management::bump_and_release("patch", None).await
+                    {
+                        eprintln!(
+                            "{}",
+                            format!("❌ Failed to bump patch version: {}", e).red()
+                        );
+                        std::process::exit(1);
                     }
                 }
-            }
-            Some(("config", sub_matches)) => {
-                match sub_matches.subcommand() {
-                    Some(("show", _)) => {
-                        if let Err(e) = commands::translation_sync::show_config().await {
-                            eprintln!("{}", format!("❌ Failed to show config: {}", e).red());
-                            std::process::exit(1);
-                        }
-                    }
-                    Some(("setup", _)) => {
-                        if let Err(e) = commands::translation_sync::setup_config().await {
-                            eprintln!("{}", format!("❌ Failed to setup config: {}", e).red());
-                            std::process::exit(1);
-                        }
-                    }
-                    Some(("reset", _)) => {
-                        if let Err(e) = commands::translation_sync::reset_config().await {
-                            eprintln!("{}", format!("❌ Failed to reset config: {}", e).red());
-                            std::process::exit(1);
-                        }
-                    }
-                    _ => {
-                        if let Err(e) = commands::translation_sync::show_config().await {
-                            eprintln!("{}", format!("❌ Failed to show config: {}", e).red());
-                            std::process::exit(1);
-                        }
+                Some(("minor", _)) => {
+                    println!("{}", "🔄 Bumping minor version...".yellow());
+                    if let Err(e) =
+                        commands::version_management::bump_and_release("minor", None).await
+                    {
+                        eprintln!(
+                            "{}",
+                            format!("❌ Failed to bump minor version: {}", e).red()
+                        );
+                        std::process::exit(1);
                     }
                 }
-            }
+                Some(("major", _)) => {
+                    println!("{}", "🔄 Bumping major version...".yellow());
+                    if let Err(e) =
+                        commands::version_management::bump_and_release("major", None).await
+                    {
+                        eprintln!(
+                            "{}",
+                            format!("❌ Failed to bump major version: {}", e).red()
+                        );
+                        std::process::exit(1);
+                    }
+                }
+                Some(("show", _)) => {
+                    println!("{}", format!("Current version: v{}", VERSION).cyan().bold());
+                }
+                Some(("history", _)) => {
+                    if let Err(e) = commands::version_management::show_version_history().await {
+                        eprintln!(
+                            "{}",
+                            format!("❌ Failed to show version history: {}", e).red()
+                        );
+                        std::process::exit(1);
+                    }
+                }
+                _ => {
+                    println!("{}", format!("Current version: v{}", VERSION).cyan().bold());
+                }
+            },
+            Some(("config", sub_matches)) => match sub_matches.subcommand() {
+                Some(("show", _)) => {
+                    if let Err(e) = commands::translation_sync::show_config().await {
+                        eprintln!("{}", format!("❌ Failed to show config: {}", e).red());
+                        std::process::exit(1);
+                    }
+                }
+                Some(("setup", _)) => {
+                    if let Err(e) = commands::translation_sync::setup_config().await {
+                        eprintln!("{}", format!("❌ Failed to setup config: {}", e).red());
+                        std::process::exit(1);
+                    }
+                }
+                Some(("reset", _)) => {
+                    if let Err(e) = commands::translation_sync::reset_config().await {
+                        eprintln!("{}", format!("❌ Failed to reset config: {}", e).red());
+                        std::process::exit(1);
+                    }
+                }
+                _ => {
+                    if let Err(e) = commands::translation_sync::show_config().await {
+                        eprintln!("{}", format!("❌ Failed to show config: {}", e).red());
+                        std::process::exit(1);
+                    }
+                }
+            },
             _ => {
                 run_interactive_mode().await;
             }
@@ -337,30 +334,54 @@ async fn run_interactive_mode() {
                 let version_input = get_user_input();
                 match version_input.as_str() {
                     "1" | "patch" => {
-                        if let Err(e) = commands::version_management::bump_and_release("patch", None).await {
-                            println!("{}", format!("❌ Failed to bump patch version: {}", e).red());
+                        if let Err(e) =
+                            commands::version_management::bump_and_release("patch", None).await
+                        {
+                            println!(
+                                "{}",
+                                format!("❌ Failed to bump patch version: {}", e).red()
+                            );
                         }
                     }
                     "2" | "minor" => {
-                        if let Err(e) = commands::version_management::bump_and_release("minor", None).await {
-                            println!("{}", format!("❌ Failed to bump minor version: {}", e).red());
+                        if let Err(e) =
+                            commands::version_management::bump_and_release("minor", None).await
+                        {
+                            println!(
+                                "{}",
+                                format!("❌ Failed to bump minor version: {}", e).red()
+                            );
                         }
                     }
                     "3" | "major" => {
-                        if let Err(e) = commands::version_management::bump_and_release("major", None).await {
-                            println!("{}", format!("❌ Failed to bump major version: {}", e).red());
+                        if let Err(e) =
+                            commands::version_management::bump_and_release("major", None).await
+                        {
+                            println!(
+                                "{}",
+                                format!("❌ Failed to bump major version: {}", e).red()
+                            );
                         }
                     }
                     "4" | "show" => {
-                        println!("\n{}", format!("Current version: v{}", VERSION).cyan().bold());
+                        println!(
+                            "\n{}",
+                            format!("Current version: v{}", VERSION).cyan().bold()
+                        );
                     }
                     "5" | "history" => {
                         if let Err(e) = commands::version_management::show_version_history().await {
-                            println!("{}", format!("❌ Failed to show version history: {}", e).red());
+                            println!(
+                                "{}",
+                                format!("❌ Failed to show version history: {}", e).red()
+                            );
                         }
                     }
                     _ => {
-                        println!("\n{}", format!("Current version: v{}", VERSION).cyan().bold());
+                        println!(
+                            "\n{}",
+                            format!("Current version: v{}", VERSION).cyan().bold()
+                        );
                     }
                 }
                 println!("\n{}", "Press Enter to continue...".dimmed());
@@ -402,41 +423,22 @@ async fn run_interactive_mode() {
                 println!();
                 println!("{}", "Usage Examples:".yellow().bold());
                 println!(
-                    "  {} {}",
-                    "Create release:".dimmed(),
-                    "nitrokit create-release v1.0.0"
+                    "  {} nitrokit create-release v1.0.0",
+                    "Create release:".dimmed()
                 );
+                println!("  {} nitrokit release-notes", "Direct command:".dimmed());
                 println!(
-                    "  {} {}",
-                    "Direct command:".dimmed(),
-                    "nitrokit release-notes"
+                    "  {} nitrokit sync-translations",
+                    "Sync translations:".dimmed()
                 );
+                println!("  {} nitrokit config show", "Config management:".dimmed());
+                println!("  {} nitrokit version patch", "Version bump:".dimmed());
                 println!(
-                    "  {} {}",
-                    "Sync translations:".dimmed(),
-                    "nitrokit sync-translations"
+                    "  {} nitrokit (then select option)",
+                    "Interactive mode:".dimmed()
                 );
-                println!(
-                    "  {} {}",
-                    "Config management:".dimmed(),
-                    "nitrokit config show"
-                );
-                println!(
-                    "  {} {}",
-                    "Version bump:".dimmed(),
-                    "nitrokit version patch"
-                );
-                println!(
-                    "  {} {}",
-                    "Interactive mode:".dimmed(),
-                    "nitrokit (then select option)"
-                );
-                println!("  {} {}", "Version info:".dimmed(), "nitrokit --version");
-                println!(
-                    "  {} {}",
-                    "Check updates:".dimmed(),
-                    "nitrokit check-updates"
-                );
+                println!("  {} nitrokit --version", "Version info:".dimmed());
+                println!("  {} nitrokit check-updates", "Check updates:".dimmed());
                 println!();
                 println!(
                     "{}",
