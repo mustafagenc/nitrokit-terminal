@@ -38,11 +38,6 @@ jobs:
         with:
           toolchain: stable
 
-      # macOS için target ekleme gereksiz (native build)
-      - name: Add target (non-macOS)
-        if: matrix.os != 'macos-13' && matrix.os != 'macos-14'
-        run: rustup target add ${{ matrix.target }}
-
       - name: Install dependencies (Linux)
         if: matrix.os == 'ubuntu-latest'
         run: |
@@ -52,10 +47,31 @@ jobs:
       - name: Install dependencies (macOS)
         if: startsWith(matrix.os, 'macos')
         run: |
-          # macOS için OpenSSL kurulumu
-          brew install openssl
-          echo "OPENSSL_DIR=/opt/homebrew/opt/openssl" >> $GITHUB_ENV
-          echo "PKG_CONFIG_PATH=/opt/homebrew/opt/openssl/lib/pkgconfig" >> $GITHUB_ENV
+          # macOS için OpenSSL setup
+          if [[ "${{ matrix.os }}" == "macos-13" ]]; then
+            # Intel Mac için
+            brew install openssl@3
+            echo "OPENSSL_DIR=/usr/local/opt/openssl@3" >> $GITHUB_ENV
+            echo "PKG_CONFIG_PATH=/usr/local/opt/openssl@3/lib/pkgconfig" >> $GITHUB_ENV
+          else
+            # Apple Silicon Mac için
+            brew install openssl@3
+            echo "OPENSSL_DIR=/opt/homebrew/opt/openssl@3" >> $GITHUB_ENV
+            echo "PKG_CONFIG_PATH=/opt/homebrew/opt/openssl@3/lib/pkgconfig" >> $GITHUB_ENV
+          fi
+
+      - name: Set OpenSSL environment variables (macOS)
+        if: startsWith(matrix.os, 'macos')
+        run: |
+          if [[ "${{ matrix.os }}" == "macos-13" ]]; then
+            # Intel Mac
+            echo "OPENSSL_INCLUDE_DIR=/usr/local/opt/openssl@3/include" >> $GITHUB_ENV
+            echo "OPENSSL_LIB_DIR=/usr/local/opt/openssl@3/lib" >> $GITHUB_ENV
+          else
+            # Apple Silicon Mac
+            echo "OPENSSL_INCLUDE_DIR=/opt/homebrew/opt/openssl@3/include" >> $GITHUB_ENV
+            echo "OPENSSL_LIB_DIR=/opt/homebrew/opt/openssl@3/lib" >> $GITHUB_ENV
+          fi
 
       - name: Cache cargo dependencies
         uses: actions/cache@v4
@@ -70,28 +86,25 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-${{ matrix.target }}-cargo-
 
-      # Native build (her platform kendi target'ında)
       - name: Build release
-        run: cargo build --release
+        run: cargo build --release --target ${{ matrix.target }}
 
       - name: Prepare binary (Unix)
         if: matrix.os != 'windows-latest'
         run: |
-          cp target/release/${{ matrix.binary_name }} ${{ matrix.asset_name }}
+          cp target/${{ matrix.target }}/release/${{ matrix.binary_name }} ${{ matrix.asset_name }}
           chmod +x ${{ matrix.asset_name }}
 
       - name: Prepare binary (Windows)
         if: matrix.os == 'windows-latest'
         run: |
-          copy target\release\${{ matrix.binary_name }} ${{ matrix.asset_name }}
+          copy target\${{ matrix.target }}\release\${{ matrix.binary_name }} ${{ matrix.asset_name }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.asset_name }}
           path: ${{ matrix.asset_name }}
-          if-no-files-found: error
-          retention-days: 1
 
   release:
     name: Create Release
@@ -120,30 +133,20 @@ jobs:
         run: |
           PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
           
-          if [ -n "$PREVIOUS_TAG" ]; then
-            COMMIT_RANGE="${PREVIOUS_TAG}..HEAD"
-          else
-            COMMIT_RANGE="HEAD"
-          fi
-          
           {
             echo "RELEASE_NOTES<<EOF"
             echo "## 🚀 What's New in ${{ github.ref_name }}"
             echo ""
-            
             if [ -n "$PREVIOUS_TAG" ]; then
               echo "### 📝 Changes since $PREVIOUS_TAG"
+              git log $PREVIOUS_TAG..HEAD --pretty=format:"- %s" --no-merges | head -20
             else
               echo "### 📝 Initial Release"
+              git log --pretty=format:"- %s" --no-merges | head -10
             fi
-            echo ""
-            
-            git log $COMMIT_RANGE --pretty=format:"- %s" --no-merges | head -20
             echo ""
             echo ""
             echo "## 📥 Downloads"
-            echo ""
-            echo "Choose the binary for your platform:"
             echo ""
             echo "| Platform | Download |"
             echo "|----------|----------|"
@@ -151,26 +154,6 @@ jobs:
             echo "| macOS (Intel) | [\`nitrokit-macos-x86_64\`](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/nitrokit-macos-x86_64) |"
             echo "| macOS (Apple Silicon) | [\`nitrokit-macos-arm64\`](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/nitrokit-macos-arm64) |"
             echo "| Linux (x64) | [\`nitrokit-linux-x86_64\`](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/nitrokit-linux-x86_64) |"
-            echo ""
-            echo "## 🛠️ Installation"
-            echo ""
-            echo "### macOS/Linux"
-            echo "\`\`\`bash"
-            echo "# Download and install"
-            echo "curl -L https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/nitrokit-\$(uname -s | tr '[:upper:]' '[:lower:]')-\$(uname -m) -o nitrokit"
-            echo "chmod +x nitrokit"
-            echo "sudo mv nitrokit /usr/local/bin/"
-            echo "\`\`\`"
-            echo ""
-            echo "### Windows"
-            echo "\`\`\`powershell"
-            echo "# Download nitrokit-windows-x86_64.exe and add to PATH"
-            echo "\`\`\`"
-            echo ""
-            echo "### Using Cargo"
-            echo "\`\`\`bash"
-            echo "cargo install nitrokit"
-            echo "\`\`\`"
             echo "EOF"
           } >> $GITHUB_OUTPUT
 
@@ -180,13 +163,10 @@ jobs:
           tag_name: ${{ github.ref_name }}
           name: "🚀 NitroKit ${{ github.ref_name }}"
           body: ${{ steps.release_notes.outputs.RELEASE_NOTES }}
-          draft: false
-          prerelease: ${{ contains(github.ref_name, 'alpha') || contains(github.ref_name, 'beta') || contains(github.ref_name, 'rc') }}
           files: |
             nitrokit-linux-x86_64
             nitrokit-windows-x86_64.exe
             nitrokit-macos-x86_64
             nitrokit-macos-arm64
-          generate_release_notes: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
