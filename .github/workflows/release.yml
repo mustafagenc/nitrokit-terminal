@@ -1,0 +1,126 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    name: Build for ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            binary_name: nitrokit
+            asset_name: nitrokit-linux-x86_64
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            binary_name: nitrokit.exe
+            asset_name: nitrokit-windows-x86_64.exe
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            binary_name: nitrokit
+            asset_name: nitrokit-macos-x86_64
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            binary_name: nitrokit
+            asset_name: nitrokit-macos-arm64
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          target: ${{ matrix.target }}
+          override: true
+
+      - name: Install dependencies (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pkg-config libssl-dev
+
+      - name: Cache cargo dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Build release
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --release --target ${{ matrix.target }}
+
+      - name: Prepare binary (Unix)
+        if: matrix.os != 'windows-latest'
+        run: |
+          cp target/${{ matrix.target }}/release/${{ matrix.binary_name }} ${{ matrix.asset_name }}
+          chmod +x ${{ matrix.asset_name }}
+
+      - name: Prepare binary (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          copy target\${{ matrix.target }}\release\${{ matrix.binary_name }} ${{ matrix.asset_name }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.asset_name }}
+          path: ${{ matrix.asset_name }}
+
+  release:
+    name: Create Release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v3
+
+      - name: Generate release notes
+        id: release_notes
+        run: |
+          # Release notes oluştur
+          echo "RELEASE_NOTES<<EOF" >> $GITHUB_OUTPUT
+          echo "## 🚀 What's New" >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          git log $(git describe --tags --abbrev=0 HEAD^)..HEAD --pretty=format:"- %s" >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          echo "## 📥 Downloads" >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          echo "Choose the binary for your platform:" >> $GITHUB_OUTPUT
+          echo "- **Windows**: \`nitrokit-windows-x86_64.exe\`" >> $GITHUB_OUTPUT
+          echo "- **macOS (Intel)**: \`nitrokit-macos-x86_64\`" >> $GITHUB_OUTPUT
+          echo "- **macOS (Apple Silicon)**: \`nitrokit-macos-arm64\`" >> $GITHUB_OUTPUT
+          echo "- **Linux**: \`nitrokit-linux-x86_64\`" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
+          body: ${{ steps.release_notes.outputs.RELEASE_NOTES }}
+          draft: false
+          prerelease: false
+          files: |
+            **/nitrokit-linux-x86_64
+            **/nitrokit-windows-x86_64.exe
+            **/nitrokit-macos-x86_64
+            **/nitrokit-macos-arm64
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

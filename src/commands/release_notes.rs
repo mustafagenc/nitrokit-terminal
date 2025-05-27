@@ -3,6 +3,8 @@ use chrono::TimeZone;
 use colored::*;
 use git2::Repository;
 use std::collections::HashMap;
+use std::process::Command;
+use anyhow::Result; 
 
 pub fn generate_release_notes() {
     log_info("Starting release notes generation...");
@@ -994,4 +996,23 @@ fn generate_comprehensive_release_notes(
     output.push_str(&format!("**Enjoy building with {}! 🚀**\n", repo_info.name));
 
     output
+}
+
+pub fn generate_release_notes_for_version(from_tag: Option<&str>, to_tag: Option<&str>) -> Result<String> {
+    let range = match (from_tag, to_tag) {
+        (Some(from), Some(to)) => format!("{}..{}", from, to),
+        (Some(from), None) => format!("{}..HEAD", from),
+        (None, Some(to)) => format!("HEAD..{}", to),
+        (None, None) => "HEAD".to_string(),
+    };
+    
+    let output = Command::new("git")
+        .args(["log", &range, "--oneline", "--pretty=format:- %s"])
+        .output()?;
+    
+    if !output.status.success() {
+        return Err(anyhow::anyhow!("Failed to generate git log"));
+    }
+    
+    Ok(String::from_utf8_lossy(&output.stdout).to_string())
 }

@@ -1,7 +1,11 @@
+[build-dependencies]
+winres = "0.1"
+
 [package]
 name = "nitrokit"
-version = "0.1.0"
+version = "0.1.2"
 edition = "2021"
+build = "build.rs"
 
 [dependencies]
 clap = { version = "4.0", features = ["derive"] }
