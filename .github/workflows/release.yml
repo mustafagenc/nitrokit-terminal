@@ -34,11 +34,10 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Rust
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
-          target: ${{ matrix.target }}
-          override: true
+          targets: ${{ matrix.target }}
 
       - name: Install dependencies (Linux)
         if: matrix.os == 'ubuntu-latest'
@@ -47,7 +46,7 @@ jobs:
           sudo apt-get install -y pkg-config libssl-dev
 
       - name: Cache cargo dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.cargo/bin/
@@ -56,12 +55,11 @@ jobs:
             ~/.cargo/git/db/
             target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
 
       - name: Build release
-        uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: --release --target ${{ matrix.target }}
+        run: cargo build --release --target ${{ matrix.target }}
 
       - name: Prepare binary (Unix)
         if: matrix.os != 'windows-latest'
@@ -75,52 +73,119 @@ jobs:
           copy target\${{ matrix.target }}\release\${{ matrix.binary_name }} ${{ matrix.asset_name }}
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.asset_name }}
           path: ${{ matrix.asset_name }}
+          if-no-files-found: error
+          retention-days: 1
 
   release:
     name: Create Release
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Download all artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Move artifacts to root
+        run: |
+          find artifacts -name "nitrokit-*" -exec mv {} . \;
+          ls -la nitrokit-*
 
       - name: Generate release notes
         id: release_notes
         run: |
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          
+          if [ -n "$PREVIOUS_TAG" ]; then
+            COMMIT_RANGE="${PREVIOUS_TAG}..HEAD"
+          else
+            # İlk release ise, tüm commit'leri al
+            COMMIT_RANGE="HEAD"
+          fi
+          
           # Release notes oluştur
-          echo "RELEASE_NOTES<<EOF" >> $GITHUB_OUTPUT
-          echo "## 🚀 What's New" >> $GITHUB_OUTPUT
-          echo "" >> $GITHUB_OUTPUT
-          git log $(git describe --tags --abbrev=0 HEAD^)..HEAD --pretty=format:"- %s" >> $GITHUB_OUTPUT
-          echo "" >> $GITHUB_OUTPUT
-          echo "## 📥 Downloads" >> $GITHUB_OUTPUT
-          echo "" >> $GITHUB_OUTPUT
-          echo "Choose the binary for your platform:" >> $GITHUB_OUTPUT
-          echo "- **Windows**: \`nitrokit-windows-x86_64.exe\`" >> $GITHUB_OUTPUT
-          echo "- **macOS (Intel)**: \`nitrokit-macos-x86_64\`" >> $GITHUB_OUTPUT
-          echo "- **macOS (Apple Silicon)**: \`nitrokit-macos-arm64\`" >> $GITHUB_OUTPUT
-          echo "- **Linux**: \`nitrokit-linux-x86_64\`" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          {
+            echo "RELEASE_NOTES<<EOF"
+            echo "## 🚀 What's New in ${{ github.ref_name }}"
+            echo ""
+            
+            if [ -n "$PREVIOUS_TAG" ]; then
+              echo "### 📝 Changes since $PREVIOUS_TAG"
+            else
+              echo "### 📝 Initial Release"
+            fi
+            echo ""
+            
+            git log $COMMIT_RANGE --pretty=format:"- %s" --no-merges | head -20
+            echo ""
+            echo ""
+            echo "## 📥 Downloads"
+            echo ""
+            echo "Choose the binary for your platform:"
+            echo ""
+            echo "| Platform | Download |"
+            echo "|----------|----------|"
+            echo "| Windows (x64) | [\`nitrokit-windows-x86_64.exe\`](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/nitrokit-windows-x86_64.exe) |"
+            echo "| macOS (Intel) | [\`nitrokit-macos-x86_64\`](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/nitrokit-macos-x86_64) |"
+            echo "| macOS (Apple Silicon) | [\`nitrokit-macos-arm64\`](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/nitrokit-macos-arm64) |"
+            echo "| Linux (x64) | [\`nitrokit-linux-x86_64\`](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/nitrokit-linux-x86_64) |"
+            echo ""
+            echo "## 🛠️ Installation"
+            echo ""
+            echo "### Quick Install (Recommended)"
+            echo "\`\`\`bash"
+            echo "# Download for your platform and make executable"
+            echo "chmod +x nitrokit-*"
+            echo "sudo mv nitrokit-* /usr/local/bin/nitrokit"
+            echo "\`\`\`"
+            echo ""
+            echo "### Using Cargo"
+            echo "\`\`\`bash"
+            echo "cargo install nitrokit"
+            echo "\`\`\`"
+            echo ""
+            echo "## 🚀 Usage"
+            echo ""
+            echo "\`\`\`bash"
+            echo "# Interactive mode"
+            echo "nitrokit"
+            echo ""
+            echo "# Direct commands"
+            echo "nitrokit release-notes"
+            echo "nitrokit version patch"
+            echo "nitrokit sync-translations"
+            echo "\`\`\`"
+            echo ""
+            echo "---"
+            echo ""
+            echo "**Full Changelog**: https://github.com/${{ github.repository }}/compare/$PREVIOUS_TAG...${{ github.ref_name }}"
+            echo "EOF"
+          } >> $GITHUB_OUTPUT
 
       - name: Create Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
-          name: Release ${{ github.ref_name }}
+          name: "🚀 NitroKit ${{ github.ref_name }}"
           body: ${{ steps.release_notes.outputs.RELEASE_NOTES }}
           draft: false
-          prerelease: false
+          prerelease: ${{ contains(github.ref_name, 'alpha') || contains(github.ref_name, 'beta') || contains(github.ref_name, 'rc') }}
           files: |
-            **/nitrokit-linux-x86_64
-            **/nitrokit-windows-x86_64.exe
-            **/nitrokit-macos-x86_64
-            **/nitrokit-macos-arm64
+            nitrokit-linux-x86_64
+            nitrokit-windows-x86_64.exe
+            nitrokit-macos-x86_64
+            nitrokit-macos-arm64
+          generate_release_notes: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
