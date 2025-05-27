@@ -20,11 +20,11 @@ jobs:
             target: x86_64-pc-windows-msvc
             binary_name: nitrokit.exe
             asset_name: nitrokit-windows-x86_64.exe
-          - os: macos-latest
+          - os: macos-13  # Intel macOS
             target: x86_64-apple-darwin
             binary_name: nitrokit
             asset_name: nitrokit-macos-x86_64
-          - os: macos-latest
+          - os: macos-14  # Apple Silicon macOS (M1/M2)
             target: aarch64-apple-darwin
             binary_name: nitrokit
             asset_name: nitrokit-macos-arm64
@@ -37,13 +37,25 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
-          targets: ${{ matrix.target }}
+
+      # macOS için target ekleme gereksiz (native build)
+      - name: Add target (non-macOS)
+        if: matrix.os != 'macos-13' && matrix.os != 'macos-14'
+        run: rustup target add ${{ matrix.target }}
 
       - name: Install dependencies (Linux)
         if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get update
           sudo apt-get install -y pkg-config libssl-dev
+
+      - name: Install dependencies (macOS)
+        if: startsWith(matrix.os, 'macos')
+        run: |
+          # macOS için OpenSSL kurulumu
+          brew install openssl
+          echo "OPENSSL_DIR=/opt/homebrew/opt/openssl" >> $GITHUB_ENV
+          echo "PKG_CONFIG_PATH=/opt/homebrew/opt/openssl/lib/pkgconfig" >> $GITHUB_ENV
 
       - name: Cache cargo dependencies
         uses: actions/cache@v4
@@ -54,23 +66,24 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-${{ matrix.target }}-cargo-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            ${{ runner.os }}-cargo-
+            ${{ runner.os }}-${{ matrix.target }}-cargo-
 
+      # Native build (her platform kendi target'ında)
       - name: Build release
-        run: cargo build --release --target ${{ matrix.target }}
+        run: cargo build --release
 
       - name: Prepare binary (Unix)
         if: matrix.os != 'windows-latest'
         run: |
-          cp target/${{ matrix.target }}/release/${{ matrix.binary_name }} ${{ matrix.asset_name }}
+          cp target/release/${{ matrix.binary_name }} ${{ matrix.asset_name }}
           chmod +x ${{ matrix.asset_name }}
 
       - name: Prepare binary (Windows)
         if: matrix.os == 'windows-latest'
         run: |
-          copy target\${{ matrix.target }}\release\${{ matrix.binary_name }} ${{ matrix.asset_name }}
+          copy target\release\${{ matrix.binary_name }} ${{ matrix.asset_name }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -110,11 +123,9 @@ jobs:
           if [ -n "$PREVIOUS_TAG" ]; then
             COMMIT_RANGE="${PREVIOUS_TAG}..HEAD"
           else
-            # İlk release ise, tüm commit'leri al
             COMMIT_RANGE="HEAD"
           fi
           
-          # Release notes oluştur
           {
             echo "RELEASE_NOTES<<EOF"
             echo "## 🚀 What's New in ${{ github.ref_name }}"
@@ -143,33 +154,23 @@ jobs:
             echo ""
             echo "## 🛠️ Installation"
             echo ""
-            echo "### Quick Install (Recommended)"
+            echo "### macOS/Linux"
             echo "\`\`\`bash"
-            echo "# Download for your platform and make executable"
-            echo "chmod +x nitrokit-*"
-            echo "sudo mv nitrokit-* /usr/local/bin/nitrokit"
+            echo "# Download and install"
+            echo "curl -L https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/nitrokit-\$(uname -s | tr '[:upper:]' '[:lower:]')-\$(uname -m) -o nitrokit"
+            echo "chmod +x nitrokit"
+            echo "sudo mv nitrokit /usr/local/bin/"
+            echo "\`\`\`"
+            echo ""
+            echo "### Windows"
+            echo "\`\`\`powershell"
+            echo "# Download nitrokit-windows-x86_64.exe and add to PATH"
             echo "\`\`\`"
             echo ""
             echo "### Using Cargo"
             echo "\`\`\`bash"
             echo "cargo install nitrokit"
             echo "\`\`\`"
-            echo ""
-            echo "## 🚀 Usage"
-            echo ""
-            echo "\`\`\`bash"
-            echo "# Interactive mode"
-            echo "nitrokit"
-            echo ""
-            echo "# Direct commands"
-            echo "nitrokit release-notes"
-            echo "nitrokit version patch"
-            echo "nitrokit sync-translations"
-            echo "\`\`\`"
-            echo ""
-            echo "---"
-            echo ""
-            echo "**Full Changelog**: https://github.com/${{ github.repository }}/compare/$PREVIOUS_TAG...${{ github.ref_name }}"
             echo "EOF"
           } >> $GITHUB_OUTPUT
 
