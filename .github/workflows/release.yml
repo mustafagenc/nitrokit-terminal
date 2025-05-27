@@ -10,6 +10,7 @@ jobs:
     name: Build for ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         include:
           - os: ubuntu-latest
@@ -36,10 +37,8 @@ jobs:
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: stable
           targets: ${{ matrix.target }}
 
-      # RustTLS kullandığımız için OpenSSL kurulumuna gerek yok
       - name: Install build dependencies (Linux)
         if: matrix.os == 'ubuntu-latest'
         run: |
@@ -62,16 +61,37 @@ jobs:
       - name: Build release
         run: cargo build --release --target ${{ matrix.target }}
 
+      - name: Debug build output
+        run: |
+          echo "=== Target directory ==="
+          ls -la target/${{ matrix.target }}/release/ || echo "Release directory not found"
+          echo "=== Looking for binary ==="
+          find target -name "${{ matrix.binary_name }}" -type f
+
       - name: Prepare binary (Unix)
         if: matrix.os != 'windows-latest'
         run: |
-          cp target/${{ matrix.target }}/release/${{ matrix.binary_name }} ${{ matrix.asset_name }}
-          chmod +x ${{ matrix.asset_name }}
+          if [ -f "target/${{ matrix.target }}/release/${{ matrix.binary_name }}" ]; then
+            cp "target/${{ matrix.target }}/release/${{ matrix.binary_name }}" "${{ matrix.asset_name }}"
+            chmod +x "${{ matrix.asset_name }}"
+            echo "✅ Binary prepared: ${{ matrix.asset_name }}"
+            ls -la "${{ matrix.asset_name }}"
+          else
+            echo "❌ Binary not found at: target/${{ matrix.target }}/release/${{ matrix.binary_name }}"
+            exit 1
+          fi
 
       - name: Prepare binary (Windows)
         if: matrix.os == 'windows-latest'
         run: |
-          copy target\${{ matrix.target }}\release\${{ matrix.binary_name }} ${{ matrix.asset_name }}
+          if (Test-Path "target\${{ matrix.target }}\release\${{ matrix.binary_name }}") {
+            Copy-Item "target\${{ matrix.target }}\release\${{ matrix.binary_name }}" "${{ matrix.asset_name }}"
+            Write-Host "✅ Binary prepared: ${{ matrix.asset_name }}"
+            Get-Item "${{ matrix.asset_name }}"
+          } else {
+            Write-Host "❌ Binary not found at: target\${{ matrix.target }}\release\${{ matrix.binary_name }}"
+            exit 1
+          }
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -92,25 +112,33 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
           path: artifacts
 
-      - name: Move artifacts to root and debug
+      - name: Debug artifact structure
         run: |
-          echo "=== Artifact directory structure ==="
-          find artifacts -type f -name "*" | head -20
+          echo "=== Complete artifacts structure ==="
+          find artifacts -type f | sort
+          echo ""
+          echo "=== Artifact subdirectories ==="
+          ls -la artifacts/
+
+      - name: Move artifacts correctly
+        run: |
+          echo "=== Moving artifacts from subdirectories ==="
+          for dir in artifacts/*/; do
+            if [ -d "$dir" ]; then
+              echo "Processing directory: $dir"
+              # Her subdirectory'den dosyaları root'a taşı
+              find "$dir" -type f -name "nitrokit-*" -exec mv {} . \;
+            fi
+          done
           
-          echo "=== Moving artifacts ==="
-          # Her artifact kendi klasöründe
-          find artifacts -type f -name "nitrokit-*" -exec cp {} . \;
-          
-          echo "=== Files in current directory ==="
-          ls -la nitrokit-* || echo "No nitrokit files found"
-          
-          echo "=== All files in artifacts directory ==="
-          find artifacts -name "*nitrokit*" -type f
+          echo "=== Files after move ==="
+          ls -la nitrokit-* 2>/dev/null || echo "No nitrokit files found after move"
 
       - name: Verify artifacts exist
         run: |
@@ -132,6 +160,8 @@ jobs:
             echo "❌ Missing files: ${MISSING_FILES[*]}"
             echo "Available files:"
             ls -la
+            echo "Searching for any nitrokit files:"
+            find . -name "*nitrokit*" -type f
             exit 1
           else
             echo "✅ All required files found"
@@ -166,11 +196,6 @@ jobs:
             echo "| Linux (x64) | [\`nitrokit-linux-x86_64\`](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/nitrokit-linux-x86_64) |"
             echo ""
             echo "## 🛠️ Installation"
-            echo ""
-            echo "### Quick Install Script"
-            echo "\`\`\`bash"
-            echo "curl -sSL https://raw.githubusercontent.com/${{ github.repository }}/main/install.sh | bash"
-            echo "\`\`\`"
             echo ""
             echo "### Manual Download"
             echo "\`\`\`bash"
@@ -213,6 +238,21 @@ jobs:
             nitrokit-macos-x86_64
             nitrokit-macos-arm64
           generate_release_notes: false
-          fail_on_unmatched_files: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  publish:
+    name: Publish to crates.io
+    needs: [build, release]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v') && !contains(github.ref, 'alpha') && !contains(github.ref, 'beta') && !contains(github.ref, 'rc')
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Publish to crates.io
+        run: cargo publish --token ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        continue-on-error: true
