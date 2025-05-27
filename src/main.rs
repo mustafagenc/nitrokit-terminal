@@ -11,14 +11,14 @@ mod tests;
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 fn print_banner() {
-    let banner = r#"
-    ███╗   ██╗██╗████████╗██████╗  ██████╗ ██╗  ██╗██╗████████╗
-    ████╗  ██║██║╚══██╔══╝██╔══██╗██╔═══██╗██║ ██╔╝██║╚══██╔══╝
-    ██╔██╗ ██║██║   ██║   ██████╔╝██║   ██║█████╔╝ ██║   ██║   
-    ██║╚██╗██║██║   ██║   ██╔══██╗██║   ██║██╔═██╗ ██║   ██║   
-    ██║ ╚████║██║   ██║   ██║  ██║╚██████╔╝██║  ██╗██║   ██║   
-    ╚═╝  ╚═══╝╚═╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝   ╚═╝   
-    "#;
+    let banner_lines = vec![
+        "      ███╗   ██╗██╗████████╗██████╗  ██████╗ ██╗  ██╗██╗████████╗     ",
+        "      ████╗  ██║██║╚══██╔══╝██╔══██╗██╔═══██╗██║ ██╔╝██║╚══██╔══╝     ",
+        "      ██╔██╗ ██║██║   ██║   ██████╔╝██║   ██║█████╔╝ ██║   ██║        ",
+        "      ██║╚██╗██║██║   ██║   ██╔══██╗██║   ██║██╔═██╗ ██║   ██║        ",
+        "      ██║ ╚████║██║   ██║   ██║  ██║╚██████╔╝██║  ██╗██║   ██║        ",
+        "      ╚═╝  ╚═══╝╚═╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝   ╚═╝        ",
+    ];
 
     #[cfg(windows)]
     {
@@ -26,7 +26,6 @@ fn print_banner() {
             fn SetConsoleTitleW(title: *const u16) -> i32;
         }
 
-        // UTF-16 string oluştur
         let title = "🚀 Nitrokit Terminal Tool\0"
             .encode_utf16()
             .collect::<Vec<u16>>();
@@ -36,25 +35,47 @@ fn print_banner() {
         }
     }
 
-    println!("{}", banner.cyan().bold());
     println!(
         "{}",
-        format!(
-            "    A terminal tool for project management and automation {}",
-            format!("v{}", VERSION).green().bold()
-        )
-        .dimmed()
+        "╔══════════════════════════════════════════════════════════════════════╗".cyan()
     );
     println!(
         "{}",
-        "    Developed by Mustafa Genc <eposta@mustafagenc.info>".dimmed()
+        "║                                                                      ║".cyan()
     );
-    println!("{}", "    https://nitrokit.tr".dimmed());
-
+    for line in banner_lines {
+        println!("{}", format!("║{}║", line).cyan().bold());
+    }
+    println!(
+        "{}",
+        "║                                                                      ║".cyan()
+    );
+    println!(
+        "{}",
+        "║         A terminal tool for project management and automation.       ║".cyan()
+    );
+    println!(
+        "{}",
+        "║                                                                      ║".cyan()
+    );
+    println!(
+        "{}",
+        "║          🌐 https://nitrokit.tr  •  📧 hello@nitrokit.tr             ║".cyan()
+    );
+    println!(
+        "{}",
+        "║                                                                      ║".cyan()
+    );
+    println!(
+        "{}",
+        "╚══════════════════════════════════════════════════════════════════════╝".cyan()
+    );
     println!();
 }
 
 fn show_menu() {
+    println!("{}", format!("Version: v{}", VERSION).green().bold().cyan());
+    println!();
     println!("{}", "Available commands:".yellow().bold());
     println!("  {} Create a new release", "1. 🚀 create-release".green());
     println!(
@@ -72,12 +93,13 @@ fn show_menu() {
     println!("  {} Manage configuration settings", "5. ⚙️ config".blue());
     println!("  {} Manage project versioning", "6. 🏷️ version".blue());
     println!("  {} Show this help menu", "7. ❓ help".blue());
-    println!("  {} Exit Nitrokit", "8. 🚪 exit".red());
+    println!();
+    println!("  {}", "0  🚪 exit".red());
     println!();
 }
 
 fn get_user_input() -> String {
-    print!("{}", "nitrokit> ".cyan().bold());
+    print!("{}", "🚀 nitrokit > ".cyan().bold());
     io::stdout().flush().unwrap();
 
     let mut input = String::new();
@@ -447,7 +469,7 @@ async fn run_interactive_mode() {
                 println!("\n{}", "Press Enter to continue...".dimmed());
                 let _ = get_user_input();
             }
-            "8" | "exit" | "quit" | "q" => {
+            "0" | "exit" | "quit" | "q" => {
                 println!(
                     "{}",
                     format!("\n👋 Thank you for using Nitrokit v{}!", VERSION).green()
