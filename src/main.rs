@@ -20,17 +20,20 @@ fn print_banner() {
     ╚═╝  ╚═══╝╚═╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝   ╚═╝   
     "#;
 
-    // Windows'ta console title'a icon ekle
     #[cfg(windows)]
     {
-        use std::ffi::CString;
-        
         extern "system" {
-            fn SetConsoleTitleA(title: *const i8) -> i32;
+            fn SetConsoleTitleW(title: *const u16) -> i32;
         }
         
-        let title = CString::new("🚀 NitroKit Terminal Tool").unwrap();
-        unsafe { SetConsoleTitleA(title.as_ptr()); }
+        // UTF-16 string oluştur
+        let title = "🚀 Nitrokit Terminal Tool\0"
+            .encode_utf16()
+            .collect::<Vec<u16>>();
+        
+        unsafe {
+            SetConsoleTitleW(title.as_ptr());
+        }
     }
 
     println!("{}", banner.cyan().bold());

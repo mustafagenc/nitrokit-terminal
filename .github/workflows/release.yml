@@ -62,12 +62,42 @@ jobs:
         run: cargo build --release --target ${{ matrix.target }}
 
       - name: Debug build output
+        shell: bash
         run: |
           echo "=== Target directory ==="
           ls -la target/${{ matrix.target }}/release/ || echo "Release directory not found"
           echo "=== Looking for binary ==="
           find target -name "${{ matrix.binary_name }}" -type f
 
+      - name: Debug Windows build (Windows only)
+        if: matrix.os == 'windows-latest'
+        shell: powershell
+        run: |
+          Write-Host "=== Checking build script execution ==="
+          if (Test-Path "src\icon.ico") {
+            Write-Host "✅ Icon file exists: src\icon.ico"
+            Get-Item "src\icon.ico" | Select-Object Name, Length
+          } else {
+            Write-Host "❌ Icon file missing: src\icon.ico"
+          }
+          
+          Write-Host "=== Checking binary properties ==="
+          if (Test-Path "target\${{ matrix.target }}\release\${{ matrix.binary_name }}") {
+            $file = Get-Item "target\${{ matrix.target }}\release\${{ matrix.binary_name }}"
+            Write-Host "Binary size: $($file.Length) bytes"
+            
+            # Version info kontrolü
+            $versionInfo = $file.VersionInfo
+            if ($versionInfo) {
+              Write-Host "✅ Version info found:"
+              Write-Host "  Product Name: $($versionInfo.ProductName)"
+              Write-Host "  File Description: $($versionInfo.FileDescription)"
+              Write-Host "  File Version: $($versionInfo.FileVersion)"
+            } else {
+              Write-Host "❌ No version info found"
+            }
+          }
+            
       - name: Prepare binary (Unix)
         if: matrix.os != 'windows-latest'
         run: |
