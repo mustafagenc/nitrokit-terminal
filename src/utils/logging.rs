@@ -1,6 +1,7 @@
 use chrono::Utc;
 use colored::*;
 
+#[derive(Debug)]
 pub enum LogLevel {
     Info,
     Warning,
@@ -47,6 +48,7 @@ pub fn log(level: LogLevel, message: &str) {
     }
 }
 
+// Helper functions for easier usage
 pub fn log_info(message: &str) {
     log(LogLevel::Info, message);
 }

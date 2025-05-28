@@ -117,9 +117,10 @@ fn show_menu() {
         "  {} Run code quality checks (lint, format, security)",
         "5. 🔍 code-quality".green()
     );
-    println!("  {} Manage configuration settings", "6. ⚙️ config".blue());
-    println!("  {} Manage project versioning", "7. 🏷️ version".blue());
-    println!("  {} Show this help menu", "8. ❓ help".blue());
+    println!("  {} Manage GitHub repository labels", "6. 🏷️ github-labels".green());
+    println!("  {} Manage configuration settings", "7. ⚙️ config".blue());
+    println!("  {} Manage project versioning", "8. 🏷️ version".blue());
+    println!("  {} Show this help menu", "9. ❓ help".blue());
     println!();
     println!("  {}", "0  🚪 exit".red());
     println!();
@@ -195,6 +196,46 @@ async fn main() {
                         .help("Enable specific checks only (comma-separated)")
                         .value_delimiter(',')
                         .required(false),
+                ),
+        )
+        .subcommand(
+            Command::new("github-labels")
+                .about("Manage GitHub repository labels with emojis and categorization")
+                .arg(
+                    clap::Arg::new("skip-auth")
+                        .long("skip-auth")
+                        .help("Skip GitHub authentication check")
+                        .action(clap::ArgAction::SetTrue),
+                )
+                .arg(
+                    clap::Arg::new("skip-install")
+                        .long("skip-install")
+                        .help("Skip GitHub CLI installation check")
+                        .action(clap::ArgAction::SetTrue),
+                )
+                .arg(
+                    clap::Arg::new("dry-run")
+                        .long("dry-run")
+                        .help("Show what would be done without making changes")
+                        .action(clap::ArgAction::SetTrue),
+                )
+                .arg(
+                    clap::Arg::new("list-only")
+                        .long("list-only")
+                        .help("Only list current labels, don't make changes")
+                        .action(clap::ArgAction::SetTrue),
+                )
+                .arg(
+                    clap::Arg::new("delete-all")
+                        .long("delete-all")
+                        .help("Delete all existing labels before creating new ones")
+                        .action(clap::ArgAction::SetTrue),
+                )
+                .arg(
+                    clap::Arg::new("update-only")
+                        .long("update-only")
+                        .help("Only update existing labels, don't create new ones")
+                        .action(clap::ArgAction::SetTrue),
                 ),
         )
         .subcommand(
@@ -285,6 +326,21 @@ async fn main() {
 
                 if let Err(e) = commands::code_quality::run_code_quality(path, config_path).await {
                     eprintln!("{}", format!("❌ Code quality checks failed: {}", e).red());
+                    std::process::exit(1);
+                }
+            }
+            Some(("github-labels", sub_matches)) => {
+                let skip_auth = sub_matches.get_flag("skip-auth");
+                let skip_install = sub_matches.get_flag("skip-install");
+                let dry_run = sub_matches.get_flag("dry-run");
+                let list_only = sub_matches.get_flag("list-only");
+                let delete_all = sub_matches.get_flag("delete-all");
+                let update_only = sub_matches.get_flag("update-only");
+
+                if let Err(e) = commands::github_labels::run_github_labels(
+                    skip_auth, skip_install, dry_run, list_only, delete_all, update_only
+                ).await {
+                    eprintln!("{}", format!("❌ GitHub labels management failed: {}", e).red());
                     std::process::exit(1);
                 }
             }
@@ -420,7 +476,15 @@ async fn run_interactive_mode() {
                 println!("\n{}", "Press Enter to continue...".dimmed());
                 let _ = get_user_input();
             }
-            "6" | "config" => {
+            "6" | "github-labels" => {
+                println!("{}", "\n🏷️ Managing GitHub labels...".yellow());
+                if let Err(e) = commands::github_labels::run_github_labels_interactive().await {
+                    println!("{}", format!("❌ GitHub labels management failed: {}", e).red());
+                }
+                println!("\n{}", "Press Enter to continue...".dimmed());
+                let _ = get_user_input();
+            }
+            "7" | "config" => {
                 println!("\n{}", "⚙️  Configuration Management".cyan().bold());
                 println!("{}", "═".repeat(30).dimmed());
                 println!("  {} Show current configuration", "1.".dimmed());
@@ -453,7 +517,7 @@ async fn run_interactive_mode() {
                 println!("\n{}", "Press Enter to continue...".dimmed());
                 let _ = get_user_input();
             }
-            "7" | "version" => {
+            "8" | "version" => {
                 println!("\n{}", "🏷️  Version Management".cyan().bold());
                 println!("{}", "═".repeat(30).dimmed());
                 println!("  {} Bump patch version (x.x.X)", "1.".dimmed());
@@ -518,7 +582,7 @@ async fn run_interactive_mode() {
                 println!("\n{}", "Press Enter to continue...".dimmed());
                 let _ = get_user_input();
             }
-            "8" | "help" => {
+            "9" | "help" => {
                 println!(
                     "\n{}",
                     format!(
@@ -551,6 +615,7 @@ async fn run_interactive_mode() {
                     "  {} - Run code quality checks (lint, format, security)",
                     "🔍 code-quality".green()
                 );
+                println!("  {} - Manage GitHub repository labels", "🏷️ github-labels".green());
                 println!("  {} - Manage configuration settings", "⚙️  config".blue());
                 println!("  {} - Manage project versioning", "🏷️  version".blue());
                 println!("  {} - Show this help information", "❓ help".blue());
@@ -571,8 +636,8 @@ async fn run_interactive_mode() {
                     "Code quality:".dimmed()
                 );
                 println!(
-                    "  {} nitroterm code-quality --checks lint,format",
-                    "Specific checks:".dimmed()
+                    "  {} nitroterm github-labels --dry-run",
+                    "GitHub labels:".dimmed()
                 );
                 println!("  {} nitroterm config show", "Config management:".dimmed());
                 println!("  {} nitroterm version patch", "Version bump:".dimmed());
@@ -599,7 +664,7 @@ async fn run_interactive_mode() {
                 println!("{} {}", "❌ Unknown command:".red(), input.yellow());
                 println!(
                     "{}",
-                    "Please choose a valid option (1-8) or type the command name.".dimmed()
+                    "Please choose a valid option (1-9) or type the command name.".dimmed()
                 );
                 println!("{}", "Type 'help' for more information.".dimmed());
                 println!();

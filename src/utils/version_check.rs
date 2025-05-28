@@ -3,25 +3,25 @@ use serde::{Deserialize, Serialize};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 #[derive(Deserialize, Serialize, Debug)]
-struct GitHubRelease {
-    tag_name: String,
-    name: String,
-    published_at: String,
-    html_url: String,
-    prerelease: bool,
+pub struct GitHubRelease {
+    pub tag_name: String,
+    pub name: String,
+    pub published_at: String,
+    pub html_url: String,
+    pub prerelease: bool,
 }
 
 #[derive(Deserialize, Serialize, Debug)]
-struct VersionCache {
-    last_check: u64,
-    latest_version: String,
-    check_interval_hours: u64,
+pub struct VersionCache {
+    pub last_check: u64,
+    pub latest_version: String,
+    pub check_interval_hours: u64,
 }
 
-const GITHUB_API_URL: &str =
+pub const GITHUB_API_URL: &str =
     "https://api.github.com/repos/mustafagenc/nitroterm-terminal/releases/latest";
-const CACHE_FILE: &str = ".nitroterm_version_cache.json";
-const CHECK_INTERVAL_HOURS: u64 = 24; // Check once per day
+pub const CACHE_FILE: &str = ".nitroterm_version_cache.json";
+pub const CHECK_INTERVAL_HOURS: u64 = 24; // Check once per day
 
 pub async fn check_for_updates(
     current_version: &str,
@@ -70,7 +70,7 @@ pub async fn check_for_updates(
     Ok(())
 }
 
-async fn fetch_latest_version() -> Result<GitHubRelease, Box<dyn std::error::Error>> {
+pub async fn fetch_latest_version() -> Result<GitHubRelease, Box<dyn std::error::Error>> {
     let client = reqwest::Client::builder()
         .timeout(Duration::from_secs(10))
         .user_agent("nitroterm-terminal")
@@ -86,7 +86,7 @@ async fn fetch_latest_version() -> Result<GitHubRelease, Box<dyn std::error::Err
     Ok(release)
 }
 
-fn should_check_for_updates() -> bool {
+pub fn should_check_for_updates() -> bool {
     match load_version_cache() {
         Some(cache) => {
             let now = SystemTime::now()
@@ -101,7 +101,7 @@ fn should_check_for_updates() -> bool {
     }
 }
 
-fn load_version_cache() -> Option<VersionCache> {
+pub fn load_version_cache() -> Option<VersionCache> {
     if let Ok(content) = std::fs::read_to_string(CACHE_FILE) {
         serde_json::from_str(&content).ok()
     } else {
@@ -109,7 +109,7 @@ fn load_version_cache() -> Option<VersionCache> {
     }
 }
 
-fn save_version_cache(latest_version: &str) {
+pub fn save_version_cache(latest_version: &str) {
     let cache = VersionCache {
         last_check: SystemTime::now()
             .duration_since(UNIX_EPOCH)
@@ -124,7 +124,7 @@ fn save_version_cache(latest_version: &str) {
     }
 }
 
-fn compare_versions(
+pub fn compare_versions(
     current: &str,
     latest: &str,
 ) -> Result<std::cmp::Ordering, Box<dyn std::error::Error>> {
@@ -137,11 +137,11 @@ fn compare_versions(
     Ok(current_ver.cmp(&latest_ver))
 }
 
-fn clean_version_string(version: &str) -> String {
+pub fn clean_version_string(version: &str) -> String {
     version.trim_start_matches('v').to_string()
 }
 
-fn show_update_available(release: &GitHubRelease, current_version: &str) {
+pub fn show_update_available(release: &GitHubRelease, current_version: &str) {
     println!();
     println!("{}", "🎉 NEW VERSION AVAILABLE!".green().bold());
     println!("{}", "═".repeat(50).dimmed());
