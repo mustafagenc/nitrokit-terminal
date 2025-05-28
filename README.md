@@ -1,7 +1,7 @@
 # 🚀 NitroKit Terminal
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Rust Version](https://img.shields.io/badge/rust-1.70%2B-blue.svg)](https://www.rust-lang.org) [![Github Release](https://github.com/mustafagenc/nitrokit-terminal/actions/workflows/release.yml/badge.svg?branch=main&event=release)](https://github.com/mustafagenc/nitrokit-terminal/actions/workflows/release.yml) <!-- [![Crates.io](https://img.shields.io/crates/v/nitrokit.svg)](https://crates.io/crates/nitrokit)
+[![codecov](https://codecov.io/gh/mustafagenc/nitroterm/graph/badge.svg?token=NjiFgkfn9G)](https://codecov.io/gh/mustafagenc/nitroterm) [![Github Release](https://github.com/mustafagenc/nitrokit-terminal/actions/workflows/release.yml/badge.svg?branch=main&event=release)](https://github.com/mustafagenc/nitrokit-terminal/actions/workflows/release.yml)  [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Rust Version](https://img.shields.io/badge/rust-1.70%2B-blue.svg)](https://www.rust-lang.org) <!-- [![Crates.io](https://img.shields.io/crates/v/nitrokit.svg)](https://crates.io/crates/nitrokit)
 [![Downloads](https://img.shields.io/crates/d/nitrokit.svg)](https://crates.io/crates/nitrokit) -->
 
 NitroKit is a powerful terminal application written in Rust that provides comprehensive project management functionalities. It automatically generates detailed release notes from git history and intelligently manages project dependencies across multiple programming languages and package managers.

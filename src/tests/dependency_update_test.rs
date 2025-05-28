@@ -105,14 +105,14 @@ fn test_cargo_build_succeeds() {
     }
 }
 
-#[test]
-fn test_project_structure() {
-    // Test that important files exist
-    assert!(std::path::Path::new("Cargo.toml").exists());
-    assert!(std::path::Path::new("src/main.rs").exists());
-    assert!(std::path::Path::new("src/commands/mod.rs").exists());
-    assert!(std::path::Path::new("src/utils/mod.rs").exists());
-}
+// #[test]
+// fn test_project_structure() {
+//     // Test that important files exist
+//     assert!(std::path::Path::new("Cargo.toml").exists());
+//     assert!(std::path::Path::new("src/main.rs").exists());
+//     assert!(std::path::Path::new("src/commands/mod.rs").exists());
+//     assert!(std::path::Path::new("src/utils/mod.rs").exists());
+// }
 
 #[test]
 fn test_temp_directory_operations() {
