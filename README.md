@@ -1,8 +1,6 @@
 # 🚀 Nitroterm Terminal Tool for [@nitrokit](https://github.com/mustafagenc/nitrokit)
 
-[![codecov](https://codecov.io/gh/mustafagenc/nitroterm/graph/badge.svg?token=NjiFgkfn9G)](https://codecov.io/gh/mustafagenc/nitroterm) [![Github Release](https://github.com/mustafagenc/nitroterm-terminal/actions/workflows/release.yml/badge.svg?branch=main&event=release)](https://github.com/mustafagenc/nitroterm-terminal/actions/workflows/release.yml)  [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Rust Version](https://img.shields.io/badge/rust-1.70%2B-blue.svg)](https://www.rust-lang.org) <!-- [![Crates.io](https://img.shields.io/crates/v/nitroterm.svg)](https://crates.io/crates/nitroterm)
-[![Downloads](https://img.shields.io/crates/d/nitroterm.svg)](https://crates.io/crates/nitroterm) -->
+[![codecov](https://codecov.io/gh/mustafagenc/nitroterm/graph/badge.svg?token=NjiFgkfn9G)](https://codecov.io/gh/mustafagenc/nitroterm) [![Release](https://github.com/mustafagenc/nitroterm/actions/workflows/release.yml/badge.svg)](https://github.com/mustafagenc/nitroterm/actions/workflows/release.yml)  [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Rust Version](https://img.shields.io/badge/rust-1.70%2B-blue.svg)](https://www.rust-lang.org) <!-- [![Crates.io](https://img.shields.io/crates/v/nitroterm.svg)](https://crates.io/crates/nitroterm) [![Downloads](https://img.shields.io/crates/d/nitroterm.svg)](https://crates.io/crates/nitroterm) -->
 
 Nitroterm is a powerful terminal application written in Rust that provides comprehensive project management functionalities. It automatically generates detailed release notes from git history and intelligently manages project dependencies across multiple programming languages and package managers.
 
