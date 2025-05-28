@@ -1,6 +1,9 @@
 name: Coverage
 
-on: [pull_request, push]
+on: 
+  pull_request:
+  push:
+    branches: [main, develop]
 
 jobs:
   coverage:
@@ -9,16 +12,33 @@ jobs:
       CARGO_TERM_COLOR: always
     steps:
       - uses: actions/checkout@v4
+      
       - name: Install Rust
-        run: rustup update stable
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+          components: llvm-tools-preview
+          
+      - name: Cache cargo registry
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          
       - name: Install cargo-llvm-cov
         uses: taiki-e/install-action@cargo-llvm-cov
+        
       - name: Generate code coverage
         run: cargo llvm-cov --all-features --workspace --lcov --output-path lcov.info
+        
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          slug: mustafagenc/nitroterm
           files: lcov.info
           fail_ci_if_error: true
+          verbose: true
