@@ -19,8 +19,8 @@ struct VersionCache {
 }
 
 const GITHUB_API_URL: &str =
-    "https://api.github.com/repos/mustafagenc/nitrokit-terminal/releases/latest";
-const CACHE_FILE: &str = ".nitrokit_version_cache.json";
+    "https://api.github.com/repos/mustafagenc/nitroterm-terminal/releases/latest";
+const CACHE_FILE: &str = ".nitroterm_version_cache.json";
 const CHECK_INTERVAL_HOURS: u64 = 24; // Check once per day
 
 pub async fn check_for_updates(
@@ -73,7 +73,7 @@ pub async fn check_for_updates(
 async fn fetch_latest_version() -> Result<GitHubRelease, Box<dyn std::error::Error>> {
     let client = reqwest::Client::builder()
         .timeout(Duration::from_secs(10))
-        .user_agent("nitrokit-terminal")
+        .user_agent("nitroterm-terminal")
         .build()?;
 
     let response = client.get(GITHUB_API_URL).send().await?;
@@ -168,7 +168,7 @@ fn show_update_available(release: &GitHubRelease, current_version: &str) {
     println!();
     println!(
         "{}",
-        "💡 Tip: Run 'nitrokit --check-updates' to check again".dimmed()
+        "💡 Tip: Run 'nitroterm --check-updates' to check again".dimmed()
     );
     println!("{}", "═".repeat(50).dimmed());
     println!();

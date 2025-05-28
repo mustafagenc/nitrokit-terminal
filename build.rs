@@ -7,8 +7,8 @@ fn main() {
             let mut res = WindowsResource::new();
             res.set_icon("src/icon.ico")
                .set_language(0x0409) // English (US)
-               .set("ProductName", "Nitrokit")
-               .set("FileDescription", "NitroKit Terminal Tool")
+               .set("ProductName", "Nitroterm")
+               .set("FileDescription", "Nitroterm Terminal Tool")
                .set("LegalCopyright", "Copyright (C) 2025 Mustafa Genc")
                .set("ProductVersion", env!("CARGO_PKG_VERSION"))
                .set("FileVersion", env!("CARGO_PKG_VERSION"));

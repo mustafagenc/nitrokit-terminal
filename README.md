@@ -1,10 +1,10 @@
-# 🚀 NitroKit Terminal
+# 🚀 Nitroterm Terminal Tool for [@nitrokit](https://github.com/mustafagenc/nitrokit)
 
-[![codecov](https://codecov.io/gh/mustafagenc/nitroterm/graph/badge.svg?token=NjiFgkfn9G)](https://codecov.io/gh/mustafagenc/nitroterm) [![Github Release](https://github.com/mustafagenc/nitrokit-terminal/actions/workflows/release.yml/badge.svg?branch=main&event=release)](https://github.com/mustafagenc/nitrokit-terminal/actions/workflows/release.yml)  [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Rust Version](https://img.shields.io/badge/rust-1.70%2B-blue.svg)](https://www.rust-lang.org) <!-- [![Crates.io](https://img.shields.io/crates/v/nitrokit.svg)](https://crates.io/crates/nitrokit)
-[![Downloads](https://img.shields.io/crates/d/nitrokit.svg)](https://crates.io/crates/nitrokit) -->
+[![codecov](https://codecov.io/gh/mustafagenc/nitroterm/graph/badge.svg?token=NjiFgkfn9G)](https://codecov.io/gh/mustafagenc/nitroterm) [![Github Release](https://github.com/mustafagenc/nitroterm-terminal/actions/workflows/release.yml/badge.svg?branch=main&event=release)](https://github.com/mustafagenc/nitroterm-terminal/actions/workflows/release.yml)  [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Rust Version](https://img.shields.io/badge/rust-1.70%2B-blue.svg)](https://www.rust-lang.org) <!-- [![Crates.io](https://img.shields.io/crates/v/nitroterm.svg)](https://crates.io/crates/nitroterm)
+[![Downloads](https://img.shields.io/crates/d/nitroterm.svg)](https://crates.io/crates/nitroterm) -->
 
-NitroKit is a powerful terminal application written in Rust that provides comprehensive project management functionalities. It automatically generates detailed release notes from git history and intelligently manages project dependencies across multiple programming languages and package managers.
+Nitroterm is a powerful terminal application written in Rust that provides comprehensive project management functionalities. It automatically generates detailed release notes from git history and intelligently manages project dependencies across multiple programming languages and package managers.
 
 ![screenshot-v0.1.0-alpha.1](assets/screenshot-v0.1.0-alpha.1.png)
 
@@ -29,7 +29,7 @@ NitroKit is a powerful terminal application written in Rust that provides compre
 
 ### 📦 Dependency Management
 
-- **Multi-Language Support**: 
+- **Multi-Language Support**:
   - 📦 **Node.js** (npm, yarn, pnpm)
   - 🦀 **Rust** (Cargo)
   - 🐍 **Python** (pip, requirements.txt)
@@ -59,16 +59,16 @@ NitroKit is a powerful terminal application written in Rust that provides compre
 #### Install Script (Unix/Linux/macOS)
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/mustafagenc/nitrokit-terminal/refs/heads/main/scripts/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/mustafagenc/nitroterm-terminal/refs/heads/main/scripts/install.sh | bash
 ```
 
 #### Manual Installation
 
 ```bash
 # Download and install (example for Linux)
-wget https://github.com/mustafagenc/nitrokit-terminal/releases/latest/download/nitrokit-linux-x86_64
-chmod +x nitrokit-linux-x86_64
-sudo mv nitrokit-linux-x86_64 /usr/local/bin/nitrokit
+wget https://github.com/mustafagenc/nitroterm-terminal/releases/latest/download/nitroterm-linux-x86_64
+chmod +x nitroterm-linux-x86_64
+sudo mv nitroterm-linux-x86_64 /usr/local/bin/nitroterm
 ```
 
 ## 🚀 Usage
@@ -77,24 +77,24 @@ sudo mv nitrokit-linux-x86_64 /usr/local/bin/nitrokit
 
 ```bash
 # Interactive mode (default)
-nitrokit
+nitroterm
 
 # Generate release notes
-nitrokit release-notes
+nitroterm release-notes
 
 # Create new release with version bump
-nitrokit create-release patch    # 1.0.0 -> 1.0.1
-nitrokit create-release minor    # 1.0.0 -> 1.1.0
-nitrokit create-release major    # 1.0.0 -> 2.0.0
+nitroterm create-release patch    # 1.0.0 -> 1.0.1
+nitroterm create-release minor    # 1.0.0 -> 1.1.0
+nitroterm create-release major    # 1.0.0 -> 2.0.0
 
 # Update dependencies
-nitrokit update-dependencies
+nitroterm update-dependencies
 
 # Sync translation files
-nitrokit sync-translations
+nitroterm sync-translations
 
 # Show help
-nitrokit --help
+nitroterm --help
 ```
 
 ### Interactive Mode
@@ -102,22 +102,22 @@ nitrokit --help
 Launch interactive mode for a user-friendly experience:
 
 ```bash
-nitrokit
+nitroterm
 ```
 
 This will present you with a menu:
 
 ```
-🚀 NitroKit Terminal Tool v0.1.2
+🚀 Nitroterm v0.1.2
 Available commands:
   1. release-notes        Generate release notes from git commits
   2. create-release       Create a new release with version bump
   3. update-dependencies  Analyze and update project dependencies
   4. sync-translations    Synchronize translation files
   5. help                 Show this help menu
-  6. exit                 Exit Nitrokit
+  6. exit                 Exit Nitroterm
 
-nitrokit> 
+nitroterm>
 ```
 
 ### Examples
@@ -127,7 +127,7 @@ nitrokit>
 ```bash
 # Generate release notes for current repository
 cd your-project
-nitrokit release-notes
+nitroterm release-notes
 ```
 
 **Output Example:**
@@ -138,7 +138,7 @@ nitrokit release-notes
 - feat: add user authentication system
 - feat: implement dark mode support
 
-## 🐛 Bug Fixes  
+## 🐛 Bug Fixes
 - fix: resolve memory leak in parser
 - fix: handle edge case in validation
 
@@ -155,10 +155,10 @@ nitrokit release-notes
 
 ```bash
 # Create a patch release (1.0.0 -> 1.0.1)
-nitrokit create-release patch
+nitroterm create-release patch
 
 # Create with custom version
-nitrokit create-release --version 2.0.0-beta.1
+nitroterm create-release --version 2.0.0-beta.1
 ```
 
 #### Dependency Updates
@@ -166,7 +166,7 @@ nitrokit create-release --version 2.0.0-beta.1
 ```bash
 # Update all dependencies in current project
 cd your-project
-nitrokit update-dependencies
+nitroterm update-dependencies
 ```
 
 **Sample Output:**
@@ -191,7 +191,7 @@ nitrokit update-dependencies
 
 ```bash
 # Sync translation files
-nitrokit sync-translations
+nitroterm sync-translations
 
 # Output
 [INFO] Found base language: en
@@ -204,7 +204,7 @@ nitrokit sync-translations
 ## 🏗️ Project Structure
 
 ```
-nitrokit-terminal/
+nitroterm-terminal/
 ├── src/
 │   ├── commands/           # Command implementations
 │   │   ├── dependency_update.rs
@@ -256,8 +256,8 @@ cargo test --all-features
 
 ```bash
 # Clone the repository
-git clone https://github.com/mustafagenc/nitrokit-terminal.git
-cd nitrokit-terminal
+git clone https://github.com/mustafagenc/nitroterm-terminal.git
+cd nitroterm-terminal
 
 # Debug build
 cargo build
@@ -298,9 +298,9 @@ cargo doc --open
 
 ## 🔧 Configuration
 
-NitroKit works out of the box without configuration, but you can customize behavior through:
+Nitroterm works out of the box without configuration, but you can customize behavior through:
 
-- **Environment Variables**: 
+- **Environment Variables**:
   - `RUST_LOG=debug` for verbose logging
   - `NITROKIT_CONFIG_PATH` for custom config location
 - **Git Configuration**: Uses your existing git setup
@@ -349,7 +349,7 @@ We welcome contributions! Here's how you can help:
 
 ## 🐛 Issue Reporting
 
-Found a bug? Please [open an issue](https://github.com/mustafagenc/nitrokit-terminal/issues) with:
+Found a bug? Please [open an issue](https://github.com/mustafagenc/nitroterm-terminal/issues) with:
 
 - **Environment**: OS, Rust version, package manager versions
 - **Expected Behavior**: What should happen
@@ -359,8 +359,8 @@ Found a bug? Please [open an issue](https://github.com/mustafagenc/nitrokit-term
 
 ## 💬 Community
 
-- **GitHub Discussions**: [Ask questions and share ideas](https://github.com/mustafagenc/nitrokit-terminal/discussions)
-- **Issue Tracker**: [Report bugs and request features](https://github.com/mustafagenc/nitrokit-terminal/issues)
+- **GitHub Discussions**: [Ask questions and share ideas](https://github.com/mustafagenc/nitroterm-terminal/discussions)
+- **Issue Tracker**: [Report bugs and request features](https://github.com/mustafagenc/nitroterm-terminal/issues)
 - **Email**: eposta@mustafagenc.info
 
 ## 📄 License

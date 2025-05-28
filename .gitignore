@@ -2,6 +2,6 @@ debug/
 target/
 **/*.rs.bk
 *.pdb
-nitrokit.db
-.nitrokit_version_cache.json
+nitroterm.db
+.nitroterm_version_cache.json
 lcov.info

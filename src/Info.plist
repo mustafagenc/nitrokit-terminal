@@ -3,17 +3,17 @@
 <plist version="1.0">
 <dict>
     <key>CFBundleName</key>
-    <string>NitroKit</string>
+    <string>Nitroterm</string>
     <key>CFBundleDisplayName</key>
-    <string>NitroKit Terminal Tool</string>
+    <string>Nitroterm Terminal Tool</string>
     <key>CFBundleIdentifier</key>
-    <string>com.mustafagenc.nitrokit</string>
+    <string>com.mustafagenc.nitroterm</string>
     <key>CFBundleVersion</key>
     <string>0.1.2</string>
     <key>CFBundleShortVersionString</key>
     <string>0.1.2</string>
     <key>CFBundleIconFile</key>
-    <string>nitrokit.icns</string>
+    <string>nitroterm.icns</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
 </dict>

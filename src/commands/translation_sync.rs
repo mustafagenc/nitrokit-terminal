@@ -170,7 +170,7 @@ pub async fn get_target_languages(messages_dir: &Path, source_file: &str) -> Res
 
     // Kullanıcıya yeni dil eklemek isteyip istemediğini sor
     println!("\n{}", "Would you like to add new languages? (y/n):".cyan());
-    print!("{}", "nitrokit> ".cyan().bold());
+    print!("{}", "nitroterm> ".cyan().bold());
 
     let mut input = String::new();
     std::io::stdin().read_line(&mut input)?;
@@ -180,7 +180,7 @@ pub async fn get_target_languages(messages_dir: &Path, source_file: &str) -> Res
             "{}",
             "Enter language codes separated by commas (e.g., 'ja,ko,zh'):".cyan()
         );
-        print!("{}", "nitrokit> ".cyan().bold());
+        print!("{}", "nitroterm> ".cyan().bold());
 
         let mut lang_input = String::new();
         std::io::stdin().read_line(&mut lang_input)?;
@@ -583,7 +583,7 @@ pub async fn sync_translations_interactive() -> Result<()> {
     if config_manager.is_first_run().await? {
         println!(
             "{}",
-            "👋 Welcome to Nitrokit Translation Sync!".cyan().bold()
+            "👋 Welcome to Nitroterm Translation Sync!".cyan().bold()
         );
         println!("{}", "Let's set up your configuration...".blue());
         println!();
@@ -602,7 +602,10 @@ pub async fn sync_translations_interactive() -> Result<()> {
         let app_config = config_manager.get_config().await?;
         if app_config.gemini_api_key.is_none() {
             println!("{}", "❌ Gemini API key not configured!".red());
-            println!("{}", "Run 'nitrokit config' to set up your API key.".blue());
+            println!(
+                "{}",
+                "Run 'nitroterm config' to set up your API key.".blue()
+            );
             return Ok(());
         }
         let translation_config = TranslationConfig::from(app_config);

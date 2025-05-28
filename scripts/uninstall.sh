@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Nitrokit macOS/Linux Uninstaller
+# Nitroterm macOS/Linux Uninstaller
 
 INSTALL_DIR="${INSTALL_DIR:-$HOME/.local/bin}"
 FORCE="${FORCE:-false}"
@@ -12,11 +12,11 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
-echo -e "${RED}🗑️  Nitrokit Uninstaller${NC}"
-echo -e "${YELLOW}Removing Nitrokit from: $INSTALL_DIR${NC}"
+echo -e "${RED}🗑️  Nitroterm Uninstaller${NC}"
+echo -e "${YELLOW}Removing Nitroterm from: $INSTALL_DIR${NC}"
 
 if [[ "$FORCE" != "true" ]]; then
-    read -p "Are you sure you want to uninstall Nitrokit? [y/N]: " -r
+    read -p "Are you sure you want to uninstall Nitroterm? [y/N]: " -r
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
         echo -e "${GREEN}Uninstallation cancelled.${NC}"
         exit 0
@@ -24,13 +24,13 @@ if [[ "$FORCE" != "true" ]]; then
 fi
 
 # Remove binary
-if [[ -f "$INSTALL_DIR/nitrokit" ]]; then
-    echo -e "${BLUE}📁 Removing Nitrokit binary...${NC}"
-    rm -f "$INSTALL_DIR/nitrokit"
-    echo -e "${GREEN}✅ Nitrokit binary removed!${NC}"
+if [[ -f "$INSTALL_DIR/nitroterm" ]]; then
+    echo -e "${BLUE}📁 Removing Nitroterm binary...${NC}"
+    rm -f "$INSTALL_DIR/nitroterm"
+    echo -e "${GREEN}✅ Nitroterm binary removed!${NC}"
 fi
 
 echo -e "${YELLOW}⚠️  Note: PATH entries and aliases in shell configuration files were not automatically removed.${NC}"
 echo -e "${YELLOW}You may want to manually remove them from ~/.bashrc, ~/.zshrc, etc.${NC}"
 
-echo -e "${GREEN}🎉 Nitrokit has been successfully uninstalled!${NC}"
+echo -e "${GREEN}🎉 Nitroterm has been successfully uninstalled!${NC}"

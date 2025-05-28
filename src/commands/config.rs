@@ -44,7 +44,7 @@ impl ConfigManager {
             ));
         }
 
-        let db_path = config_dir.join("nitrokit.db");
+        let db_path = config_dir.join("nitroterm.db");
 
         // Check if we can write to the directory
         if !config_dir.exists() || std::fs::metadata(&config_dir)?.permissions().readonly() {
@@ -73,7 +73,7 @@ impl ConfigManager {
                     "{}",
                     "⚠️  Cannot access home config directory, using local config".yellow()
                 );
-                let local_db_path = "./nitrokit.db";
+                let local_db_path = "./nitroterm.db";
                 let local_url = format!("sqlite:{}?mode=rwc", local_db_path);
 
                 match SqlitePool::connect(&local_url).await {
@@ -117,7 +117,7 @@ impl ConfigManager {
     pub fn get_config_dir() -> Result<PathBuf> {
         // Try multiple fallback locations
         if let Some(home_dir) = dirs::home_dir() {
-            let config_dir = home_dir.join(".config").join("nitrokit");
+            let config_dir = home_dir.join(".config").join("nitroterm");
             if Self::test_directory_writable(&config_dir) {
                 return Ok(config_dir);
             }
@@ -125,20 +125,20 @@ impl ConfigManager {
 
         // Fallback 1: XDG_CONFIG_HOME
         if let Ok(xdg_config) = std::env::var("XDG_CONFIG_HOME") {
-            let config_dir = PathBuf::from(xdg_config).join("nitrokit");
+            let config_dir = PathBuf::from(xdg_config).join("nitroterm");
             if Self::test_directory_writable(&config_dir) {
                 return Ok(config_dir);
             }
         }
 
         // Fallback 2: Current directory
-        let current_dir = std::env::current_dir()?.join(".nitrokit");
+        let current_dir = std::env::current_dir()?.join(".nitroterm");
         if Self::test_directory_writable(&current_dir) {
             return Ok(current_dir);
         }
 
         // Fallback 3: Temp directory
-        let temp_dir = std::env::temp_dir().join("nitrokit");
+        let temp_dir = std::env::temp_dir().join("nitroterm");
         Ok(temp_dir)
     }
 
@@ -243,7 +243,7 @@ impl ConfigManager {
     }
 
     pub async fn interactive_setup(&self) -> Result<AppConfig> {
-        println!("{}", "🎯 Nitrokit Configuration Setup".cyan().bold());
+        println!("{}", "🎯 Nitroterm Configuration Setup".cyan().bold());
         println!("{}", "═".repeat(40).dimmed());
         println!();
 

@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Nitrokit macOS/Linux Installer
-# Bash script to install Nitrokit on Unix-like systems
+# Nitroterm macOS/Linux Installer
+# Bash script to install Nitroterm on Unix-like systems
 
 set -e
 
@@ -31,7 +31,7 @@ print_banner() {
     ██║ ╚████║██║   ██║   ██║  ██║╚██████╔╝██║  ██╗██║   ██║   
     ╚═╝  ╚═══╝╚═╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝   ╚═╝   
 
-    🚀 Nitrokit macOS/Linux Installer
+    🚀 Nitroterm macOS/Linux Installer
     A terminal tool for project management and automation
 
 EOF
@@ -112,44 +112,44 @@ create_install_dir() {
     log_success "Installation directory created!"
 }
 
-# Build or download Nitrokit
-install_nitrokit() {
-    local nitrokit_binary="$INSTALL_DIR/nitrokit"
+# Build or download Nitroterm
+install_nitroterm() {
+    local nitroterm_binary="$INSTALL_DIR/nitroterm"
     
     if [[ "$BUILD_FROM_SOURCE" == "true" ]]; then
-        log_info "🏗️  Building Nitrokit from source..."
+        log_info "🏗️  Building Nitroterm from source..."
         
         # Create temporary directory
         local temp_dir=$(mktemp -d)
         cd "$temp_dir"
         
         log_info "📥 Cloning repository..."
-        git clone https://github.com/mustafagenc/nitrokit-terminal.git
+        git clone https://github.com/mustafagenc/nitroterm-terminal.git
         
-        cd nitrokit-terminal/nitrokit
+        cd nitroterm-terminal/nitroterm
         
-        log_info "🔨 Compiling Nitrokit..."
+        log_info "🔨 Compiling Nitroterm..."
         cargo build --release
         
         log_info "📦 Installing binary..."
-        cp target/release/nitrokit "$nitrokit_binary"
+        cp target/release/nitroterm "$nitroterm_binary"
         
         # Cleanup
         rm -rf "$temp_dir"
     else
         # Future: download pre-built binary
-        log_info "📥 Downloading Nitrokit binary..."
-        # curl -L -o "$nitrokit_binary" "https://github.com/mustafagenc/nitrokit/releases/latest/download/nitrokit-$(uname -s)-$(uname -m)"
+        log_info "📥 Downloading Nitroterm binary..."
+        # curl -L -o "$nitroterm_binary" "https://github.com/mustafagenc/nitroterm/releases/latest/download/nitroterm-$(uname -s)-$(uname -m)"
     fi
     
     # Make executable
-    chmod +x "$nitrokit_binary"
+    chmod +x "$nitroterm_binary"
     
     # Verify installation
-    if [[ -x "$nitrokit_binary" ]]; then
-        log_success "Nitrokit binary installed successfully!"
+    if [[ -x "$nitroterm_binary" ]]; then
+        log_success "Nitroterm binary installed successfully!"
     else
-        log_error "Failed to install Nitrokit binary!"
+        log_error "Failed to install Nitroterm binary!"
         exit 1
     fi
 }
@@ -160,7 +160,7 @@ add_to_path() {
         return
     fi
     
-    log_info "🔧 Adding Nitrokit to PATH..."
+    log_info "🔧 Adding Nitroterm to PATH..."
     
     # Detect shell
     local shell_name=$(basename "$SHELL")
@@ -227,11 +227,11 @@ create_alias() {
     
     if [[ -n "$shell_rc" ]]; then
         if [[ "$shell_name" == "fish" ]]; then
-            echo "alias nk='nitrokit'" >> "$shell_rc"
-            echo "alias nki='nitrokit -i'" >> "$shell_rc"
+            echo "alias nk='nitroterm'" >> "$shell_rc"
+            echo "alias nki='nitroterm -i'" >> "$shell_rc"
         else
-            echo "alias nk='nitrokit'" >> "$shell_rc"
-            echo "alias nki='nitrokit -i'" >> "$shell_rc"
+            echo "alias nk='nitroterm'" >> "$shell_rc"
+            echo "alias nki='nitroterm -i'" >> "$shell_rc"
         fi
         
         log_success "Aliases created! Use 'nk' or 'nki' for quick access."
@@ -258,7 +258,7 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         --help)
-            echo "Nitrokit Installer"
+            echo "Nitroterm Installer"
             echo ""
             echo "Options:"
             echo "  --install-dir DIR     Installation directory (default: \$HOME/.local/bin)"
@@ -279,13 +279,13 @@ done
 main() {
     print_banner
     
-    log_info "Starting Nitrokit installation..."
+    log_info "Starting Nitroterm installation..."
     log_info "Installation directory: $INSTALL_DIR"
     echo ""
     
     check_requirements
     create_install_dir
-    install_nitrokit
+    install_nitroterm
     add_to_path
     create_alias
     
@@ -294,14 +294,14 @@ main() {
     echo ""
     echo -e "${CYAN}📍 Installation location:${NC} $INSTALL_DIR"
     echo -e "${CYAN}🚀 Usage:${NC}"
-    echo "   • Command line: nitrokit"
-    echo "   • Interactive mode: nitrokit -i"
+    echo "   • Command line: nitroterm"
+    echo "   • Interactive mode: nitroterm -i"
     echo "   • Quick aliases: nk, nki"
-    echo "   • Generate release notes: nitrokit release-notes"
-    echo "   • Update dependencies: nitrokit update-dependencies"
+    echo "   • Generate release notes: nitroterm release-notes"
+    echo "   • Update dependencies: nitroterm update-dependencies"
     echo ""
-    echo -e "${CYAN}📚 Documentation:${NC} https://github.com/mustafagenc/nitrokit-terminal"
-    echo -e "${CYAN}🐛 Issues:${NC} https://github.com/mustafagenc/nitrokit-/issues"
+    echo -e "${CYAN}📚 Documentation:${NC} https://github.com/mustafagenc/nitroterm-terminal"
+    echo -e "${CYAN}🐛 Issues:${NC} https://github.com/mustafagenc/nitroterm-/issues"
     echo ""
     
     if [[ "$ADD_TO_SHELL" == "true" ]]; then

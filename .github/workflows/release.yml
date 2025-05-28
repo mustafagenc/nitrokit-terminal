@@ -15,20 +15,20 @@ jobs:
         include:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-            binary_name: nitrokit
-            asset_name: nitrokit-linux-x86_64
+            binary_name: nitroterm
+            asset_name: nitroterm-linux-x86_64
           - os: windows-latest
             target: x86_64-pc-windows-msvc
-            binary_name: nitrokit.exe
-            asset_name: nitrokit-windows-x86_64.exe
+            binary_name: nitroterm.exe
+            asset_name: nitroterm-windows-x86_64.exe
           - os: macos-13  # Intel macOS
             target: x86_64-apple-darwin
-            binary_name: nitrokit
-            asset_name: nitrokit-macos-x86_64
+            binary_name: nitroterm
+            asset_name: nitroterm-macos-x86_64
           - os: macos-14  # Apple Silicon macOS (M1/M2)
             target: aarch64-apple-darwin
-            binary_name: nitrokit
-            asset_name: nitrokit-macos-arm64
+            binary_name: nitroterm
+            asset_name: nitroterm-macos-arm64
 
     steps:
       - name: Checkout code
@@ -80,12 +80,12 @@ jobs:
           } else {
             Write-Host "❌ Icon file missing: src\icon.ico"
           }
-          
+
           Write-Host "=== Checking binary properties ==="
           if (Test-Path "target\${{ matrix.target }}\release\${{ matrix.binary_name }}") {
             $file = Get-Item "target\${{ matrix.target }}\release\${{ matrix.binary_name }}"
             Write-Host "Binary size: $($file.Length) bytes"
-            
+
             # Version info kontrolü
             $versionInfo = $file.VersionInfo
             if ($versionInfo) {
@@ -97,7 +97,7 @@ jobs:
               Write-Host "❌ No version info found"
             }
           }
-            
+
       - name: Prepare binary (Unix)
         if: matrix.os != 'windows-latest'
         run: |
@@ -163,46 +163,46 @@ jobs:
             if [ -d "$dir" ]; then
               echo "Processing directory: $dir"
               # Her subdirectory'den dosyaları root'a taşı
-              find "$dir" -type f -name "nitrokit-*" -exec mv {} . \;
+              find "$dir" -type f -name "nitroterm-*" -exec mv {} . \;
             fi
           done
-          
+
           echo "=== Files after move ==="
-          ls -la nitrokit-* 2>/dev/null || echo "No nitrokit files found after move"
+          ls -la nitroterm-* 2>/dev/null || echo "No nitroterm files found after move"
 
       - name: Verify artifacts exist
         run: |
           REQUIRED_FILES=(
-            "nitrokit-linux-x86_64"
-            "nitrokit-windows-x86_64.exe"
-            "nitrokit-macos-x86_64"
-            "nitrokit-macos-arm64"
+            "nitroterm-linux-x86_64"
+            "nitroterm-windows-x86_64.exe"
+            "nitroterm-macos-x86_64"
+            "nitroterm-macos-arm64"
           )
-          
+
           MISSING_FILES=()
           for file in "${REQUIRED_FILES[@]}"; do
             if [ ! -f "$file" ]; then
               MISSING_FILES+=("$file")
             fi
           done
-          
+
           if [ ${#MISSING_FILES[@]} -ne 0 ]; then
             echo "❌ Missing files: ${MISSING_FILES[*]}"
             echo "Available files:"
             ls -la
-            echo "Searching for any nitrokit files:"
-            find . -name "*nitrokit*" -type f
+            echo "Searching for any nitroterm files:"
+            find . -name "*nitroterm*" -type f
             exit 1
           else
             echo "✅ All required files found"
-            ls -la nitrokit-*
+            ls -la nitroterm-*
           fi
 
       - name: Generate release notes
         id: release_notes
         run: |
           PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
-          
+
           {
             echo "RELEASE_NOTES<<EOF"
             echo "## 🚀 What's New in ${{ github.ref_name }}"
@@ -220,36 +220,36 @@ jobs:
             echo ""
             echo "| Platform | Download |"
             echo "|----------|----------|"
-            echo "| Windows (x64) | [\`nitrokit-windows-x86_64.exe\`](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/nitrokit-windows-x86_64.exe) |"
-            echo "| macOS (Intel) | [\`nitrokit-macos-x86_64\`](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/nitrokit-macos-x86_64) |"
-            echo "| macOS (Apple Silicon) | [\`nitrokit-macos-arm64\`](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/nitrokit-macos-arm64) |"
-            echo "| Linux (x64) | [\`nitrokit-linux-x86_64\`](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/nitrokit-linux-x86_64) |"
+            echo "| Windows (x64) | [\`nitroterm-windows-x86_64.exe\`](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/nitroterm-windows-x86_64.exe) |"
+            echo "| macOS (Intel) | [\`nitroterm-macos-x86_64\`](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/nitroterm-macos-x86_64) |"
+            echo "| macOS (Apple Silicon) | [\`nitroterm-macos-arm64\`](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/nitroterm-macos-arm64) |"
+            echo "| Linux (x64) | [\`nitroterm-linux-x86_64\`](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/nitroterm-linux-x86_64) |"
             echo ""
             echo "## 🛠️ Installation"
             echo ""
             echo "### Manual Download"
             echo "\`\`\`bash"
             echo "# Linux/macOS"
-            echo "wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/nitrokit-\$(uname -s | tr '[:upper:]' '[:lower:]')-\$(uname -m)"
-            echo "chmod +x nitrokit-*"
-            echo "sudo mv nitrokit-* /usr/local/bin/nitrokit"
+            echo "wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/nitroterm-\$(uname -s | tr '[:upper:]' '[:lower:]')-\$(uname -m)"
+            echo "chmod +x nitroterm-*"
+            echo "sudo mv nitroterm-* /usr/local/bin/nitroterm"
             echo "\`\`\`"
             echo ""
             echo "### Using Cargo"
             echo "\`\`\`bash"
-            echo "cargo install nitrokit"
+            echo "cargo install nitroterm"
             echo "\`\`\`"
             echo ""
             echo "## 🚀 Usage"
             echo ""
             echo "\`\`\`bash"
             echo "# Interactive mode"
-            echo "nitrokit"
+            echo "nitroterm"
             echo ""
             echo "# Direct commands"
-            echo "nitrokit release-notes"
-            echo "nitrokit create-release patch"
-            echo "nitrokit sync-translations"
+            echo "nitroterm release-notes"
+            echo "nitroterm create-release patch"
+            echo "nitroterm sync-translations"
             echo "\`\`\`"
             echo "EOF"
           } >> $GITHUB_OUTPUT
@@ -258,15 +258,15 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
-          name: "🚀 NitroKit ${{ github.ref_name }}"
+          name: "🚀 Nitroterm ${{ github.ref_name }}"
           body: ${{ steps.release_notes.outputs.RELEASE_NOTES }}
           draft: false
           prerelease: ${{ contains(github.ref_name, 'alpha') || contains(github.ref_name, 'beta') || contains(github.ref_name, 'rc') }}
           files: |
-            nitrokit-linux-x86_64
-            nitrokit-windows-x86_64.exe
-            nitrokit-macos-x86_64
-            nitrokit-macos-arm64
+            nitroterm-linux-x86_64
+            nitroterm-windows-x86_64.exe
+            nitroterm-macos-x86_64
+            nitroterm-macos-arm64
           generate_release_notes: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

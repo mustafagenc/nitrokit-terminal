@@ -5,13 +5,13 @@
 ### Windows (PowerShell)
 
 ```powershell
-irm https://raw.githubusercontent.com/mustafagenc/nitrokit-terminal/main/scripts/install.ps1 | iex
+irm https://raw.githubusercontent.com/mustafagenc/nitroterm-terminal/main/scripts/install.ps1 | iex
 ```
 
 ### macOS/Linux (Bash)
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/mustafagenc/nitrokit-terminal/main/scripts/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/mustafagenc/nitroterm-terminal/main/scripts/install.sh | bash
 ```
 
 ## Manual Installation
@@ -24,8 +24,8 @@ curl -sSL https://raw.githubusercontent.com/mustafagenc/nitrokit-terminal/main/s
 ### From Source
 
 ```bash
-git clone https://github.com/mustafagenc/nitrokit-terminal.git
-cd nitrokit-terminal/nitrokit
+git clone https://github.com/mustafagenc/nitroterm-terminal.git
+cd nitroterm-terminal/nitroterm
 cargo build --release
 cargo install --path .
 ```
@@ -36,20 +36,20 @@ cargo install --path .
 
 ```bash
 # Interactive mode
-nitrokit -i
+nitroterm -i
 
 # Generate release notes
-nitrokit release-notes
+nitroterm release-notes
 
 # Update dependencies
-nitrokit update-dependencies --check-only
+nitroterm update-dependencies --check-only
 ```
 
 ### Quick Aliases (after installation)
 
 ```bash
-nk      # shortcut for nitrokit
-nki     # shortcut for nitrokit -i (interactive)
+nk      # shortcut for nitroterm
+nki     # shortcut for nitroterm -i (interactive)
 ```
 
 ## Uninstall
@@ -58,12 +58,12 @@ nki     # shortcut for nitrokit -i (interactive)
 
 ```powershell
 # Download and run uninstaller
-Invoke-WebRequest -Uri "https://raw.githubusercontent.com/mustafagenc/nitrokit-terminal/main/scripts/uninstall.ps1" -OutFile "uninstall.ps1"
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/mustafagenc/nitroterm-terminal/main/scripts/uninstall.ps1" -OutFile "uninstall.ps1"
 .\uninstall.ps1
 ```
 
 ### macOS/Linux
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/mustafagenc/nitrokit-terminal/main/scripts/uninstall.sh | bash
+curl -sSL https://raw.githubusercontent.com/mustafagenc/nitroterm-terminal/main/scripts/uninstall.sh | bash
 ```

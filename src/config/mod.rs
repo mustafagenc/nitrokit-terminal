@@ -16,7 +16,7 @@ impl Config {
 impl Default for Config {
     fn default() -> Self {
         Self {
-            project_name: "nitrokit".to_string(),
+            project_name: "nitroterm".to_string(),
             git_remote: "origin".to_string(),
             release_format: "markdown".to_string(),
         }

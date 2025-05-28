@@ -26,7 +26,7 @@ fn print_banner() {
             fn SetConsoleTitleW(title: *const u16) -> i32;
         }
 
-        let title = "🚀 Nitrokit Terminal Tool\0"
+        let title = "🚀 Nitroterm Terminal Tool\0"
             .encode_utf16()
             .collect::<Vec<u16>>();
 
@@ -43,6 +43,14 @@ fn print_banner() {
         "{}",
         "║                                                                      ║".cyan()
     );
+    println!(
+        "{}",
+        "║       A terminal tool for project management and automation for      ║".cyan()
+    );
+    println!(
+        "{}",
+        "║                                                                      ║".cyan()
+    );
     for line in banner_lines {
         println!("{}", format!("║{}║", line).cyan().bold());
     }
@@ -52,15 +60,11 @@ fn print_banner() {
     );
     println!(
         "{}",
-        "║         A terminal tool for project management and automation.       ║".cyan()
-    );
-    println!(
-        "{}",
         "║                                                                      ║".cyan()
     );
     println!(
         "{}",
-        "║          🌐 https://nitrokit.tr  •  📧 hello@nitrokit.tr             ║".cyan()
+        "║          🌐 https://nitroterm.tr  •  📧 hello@nitroterm.tr           ║".cyan()
     );
     println!(
         "{}",
@@ -76,7 +80,7 @@ fn print_banner() {
 fn show_menu() {
     println!(
         "{}",
-        format!("Nitrokit v{} - Built with Rust 🦀", VERSION).dimmed().bold().blue()
+        format!("Nitroterm v{} - Built with Rust 🦀", VERSION).dimmed().bold().blue()
     );
     println!();
     println!("{}", "Available commands:".yellow().bold());
@@ -106,7 +110,7 @@ fn show_menu() {
 }
 
 fn get_user_input() -> String {
-    print!("{}", "🚀 nitrokit > ".cyan().bold());
+    print!("{}", "🚀 nitroterm > ".cyan().bold());
     io::stdout().flush().unwrap();
 
     let mut input = String::new();
@@ -118,7 +122,7 @@ fn get_user_input() -> String {
 async fn main() {
     dotenv::dotenv().ok();
 
-    let app = Command::new("nitrokit")
+    let app = Command::new("nitroterm")
         .version(VERSION)
         .about("A terminal tool for project management and automation")
         .author("Mustafa Genc <eposta@mustafagenc.info>")
@@ -538,32 +542,32 @@ async fn run_interactive_mode() {
                 println!();
                 println!("{}", "Usage Examples:".yellow().bold());
                 println!(
-                    "  {} nitrokit create-release v1.0.0",
+                    "  {} nitroterm create-release v1.0.0",
                     "Create release:".dimmed()
                 );
-                println!("  {} nitrokit release-notes", "Direct command:".dimmed());
+                println!("  {} nitroterm release-notes", "Direct command:".dimmed());
                 println!(
-                    "  {} nitrokit sync-translations",
+                    "  {} nitroterm sync-translations",
                     "Sync translations:".dimmed()
                 );
                 println!(
-                    "  {} nitrokit code-quality --path ./my-project",
+                    "  {} nitroterm code-quality --path ./my-project",
                     "Code quality:".dimmed()
                 );
                 println!(
-                    "  {} nitrokit code-quality --checks lint,format",
+                    "  {} nitroterm code-quality --checks lint,format",
                     "Specific checks:".dimmed()
                 );
-                println!("  {} nitrokit config show", "Config management:".dimmed());
-                println!("  {} nitrokit version patch", "Version bump:".dimmed());
+                println!("  {} nitroterm config show", "Config management:".dimmed());
+                println!("  {} nitroterm version patch", "Version bump:".dimmed());
                 println!(
-                    "  {} nitrokit (then select option)",
+                    "  {} nitroterm (then select option)",
                     "Interactive mode:".dimmed()
                 );
                 println!();
                 println!(
                     "{}",
-                    format!("NitroKit v{} - Built with Rust 🦀", VERSION).dimmed()
+                    format!("Nitroterm v{} - Built with Rust 🦀", VERSION).dimmed()
                 );
                 println!("\n{}", "Press Enter to continue...".dimmed());
                 let _ = get_user_input();
@@ -571,7 +575,7 @@ async fn run_interactive_mode() {
             "0" | "exit" | "quit" | "q" => {
                 println!(
                     "{}",
-                    format!("\n👋 Thank you for using Nitrokit v{}!", VERSION).green()
+                    format!("\n👋 Thank you for using Nitroterm v{}!", VERSION).green()
                 );
                 break;
             }
