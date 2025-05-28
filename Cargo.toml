@@ -12,21 +12,21 @@ clap = { version = "4.0", features = ["derive"] }
 tokio = { version = "1", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-colored = "2.0"
-git2 = "0.18"
+colored = "3.0"
+git2 = "0.20.2"
 chrono = { version = "0.4", features = ["serde"] }
-reqwest = { version = "0.11", features = ["json", "rustls-tls"], default-features = false }
+reqwest = { version = "0.12.17", features = ["json", "rustls-tls"], default-features = false }
 regex = "1.11.1"
 semver = "1.0"
 anyhow = "1.0"
 dotenv = "0.15"
 indexmap = { version = "2.0", features = ["serde"] }
 sqlx = { version = "0.8", features = ["runtime-tokio-rustls", "sqlite", "chrono"] }
-dirs = "5.0"
+dirs = "6.0"
 tempfile = "3.8"
-fluent = "0.16"
-fluent-langneg = "0.13"
-fluent-bundle = "0.15"
+fluent = "0.17"
+fluent-langneg = "0.14.1"
+fluent-bundle = "0.16"
 unic-langid = "0.9"
 
 [dev-dependencies]
