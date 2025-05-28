@@ -4,3 +4,4 @@ target/
 *.pdb
 nitrokit.db
 .nitrokit_version_cache.json
+lcov.info

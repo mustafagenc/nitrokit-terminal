@@ -27,8 +27,8 @@ impl Default for AppConfig {
 }
 
 pub struct ConfigManager {
-    pool: Pool<Sqlite>,
-    config_dir: PathBuf,
+    pub pool: Pool<Sqlite>,
+    pub config_dir: PathBuf,
 }
 
 impl ConfigManager {
@@ -114,7 +114,7 @@ impl ConfigManager {
         Ok(Self { pool, config_dir })
     }
 
-    fn get_config_dir() -> Result<PathBuf> {
+    pub fn get_config_dir() -> Result<PathBuf> {
         // Try multiple fallback locations
         if let Some(home_dir) = dirs::home_dir() {
             let config_dir = home_dir.join(".config").join("nitrokit");
@@ -142,7 +142,7 @@ impl ConfigManager {
         Ok(temp_dir)
     }
 
-    fn test_directory_writable(dir: &PathBuf) -> bool {
+    pub fn test_directory_writable(dir: &PathBuf) -> bool {
         // Try to create directory and test write access
         if std::fs::create_dir_all(dir).is_err() {
             return false;

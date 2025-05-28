@@ -91,7 +91,7 @@ fn test_release_notes_function() {
 async fn test_cargo_build_succeeds() {
     let temp_dir = tempfile::tempdir().unwrap();
     let temp_path = temp_dir.path();
-    
+
     // Create a minimal Cargo.toml for testing
     let cargo_toml_content = r#"
 [package]
@@ -101,24 +101,25 @@ edition = "2021"
 
 [dependencies]
 "#;
-    
+
     let cargo_toml_path = temp_path.join("Cargo.toml");
     std::fs::write(&cargo_toml_path, cargo_toml_content).unwrap();
-    
+
     // Create src/lib.rs
     let src_dir = temp_path.join("src");
     std::fs::create_dir_all(&src_dir).unwrap();
     std::fs::write(src_dir.join("lib.rs"), "// Empty lib file").unwrap();
-    
+
     // Now test cargo check
     let output = std::process::Command::new("cargo")
         .arg("check")
         .current_dir(temp_path)
         .output()
         .expect("Failed to execute cargo check");
-    
-    assert!(output.status.success(), 
-        "Cargo check failed:\nstdout: {}\nstderr: {}", 
+
+    assert!(
+        output.status.success(),
+        "Cargo check failed:\nstdout: {}\nstderr: {}",
         String::from_utf8_lossy(&output.stdout),
         String::from_utf8_lossy(&output.stderr)
     );

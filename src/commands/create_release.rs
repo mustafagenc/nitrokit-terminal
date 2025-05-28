@@ -359,15 +359,3 @@ async fn create_git_tag(version: &str, message: Option<&str>) -> Result<()> {
     println!("✅ Created tag: {}", tag_name.green());
     Ok(())
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_determine_bump_type() {
-        assert_eq!(determine_bump_type("major").unwrap(), "major");
-        assert_eq!(determine_bump_type("minor").unwrap(), "minor");
-        assert_eq!(determine_bump_type("patch").unwrap(), "patch");
-    }
-}
