@@ -51,9 +51,25 @@ fn print_banner() {
         "{}",
         "║                                                                      ║".cyan()
     );
-    for line in banner_lines {
-        println!("{}", format!("║{}║", line).cyan().bold());
+
+        for (line_idx, line) in banner_lines.iter().enumerate() {
+        print!("{}", "║".cyan());
+
+        // Her karakteri farklı renkle boyayalım
+        for (char_idx, ch) in line.chars().enumerate() {
+            let progress = (char_idx as f32 + line_idx as f32 * 20.0) / (line.len() as f32 + banner_lines.len() as f32 * 20.0);
+
+            // Blue to Green gradient
+            let r = (65.0 + progress * (0.0 - 65.0)) as u8;
+            let g = (105.0 + progress * (255.0 - 105.0)) as u8;
+            let b = (225.0 + progress * (127.0 - 225.0)) as u8;
+
+            print!("{}", ch.to_string().truecolor(r, g, b).bold());
+        }
+
+        println!("{}", "║".cyan());
     }
+
     println!(
         "{}",
         "║                                                                      ║".cyan()
