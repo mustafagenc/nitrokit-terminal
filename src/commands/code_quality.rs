@@ -319,43 +319,36 @@ impl CodeQualityManager {
     }
 
     pub fn generate_python_checks(&self, project_info: &ProjectInfo) -> Result<Vec<QualityCheck>> {
-        let mut checks = Vec::new();
-
-        // Python linting with flake8 or pylint
-        checks.push(QualityCheck {
-            name: "lint".to_string(),
-            command: "flake8".to_string(),
-            args: vec![".".to_string()],
-            working_dir: project_info.root_path.clone(),
-            timeout: self.config.timeout_seconds,
-        });
-
-        // Python formatting with black
-        checks.push(QualityCheck {
-            name: "format".to_string(),
-            command: "black".to_string(),
-            args: vec!["--check".to_string(), ".".to_string()],
-            working_dir: project_info.root_path.clone(),
-            timeout: self.config.timeout_seconds,
-        });
-
-        // Python testing with pytest
-        checks.push(QualityCheck {
-            name: "test".to_string(),
-            command: "pytest".to_string(),
-            args: vec![],
-            working_dir: project_info.root_path.clone(),
-            timeout: self.config.timeout_seconds,
-        });
-
-        // Python security with bandit
-        checks.push(QualityCheck {
-            name: "security".to_string(),
-            command: "bandit".to_string(),
-            args: vec!["-r".to_string(), ".".to_string()],
-            working_dir: project_info.root_path.clone(),
-            timeout: self.config.timeout_seconds,
-        });
+        let checks = vec![
+            QualityCheck {
+                name: "lint".to_string(),
+                command: "flake8".to_string(),
+                args: vec![".".to_string()],
+                working_dir: project_info.root_path.clone(),
+                timeout: self.config.timeout_seconds,
+            },
+            QualityCheck {
+                name: "format".to_string(),
+                command: "black".to_string(),
+                args: vec!["--check".to_string(), ".".to_string()],
+                working_dir: project_info.root_path.clone(),
+                timeout: self.config.timeout_seconds,
+            },
+            QualityCheck {
+                name: "test".to_string(),
+                command: "pytest".to_string(),
+                args: vec![],
+                working_dir: project_info.root_path.clone(),
+                timeout: self.config.timeout_seconds,
+            },
+            QualityCheck {
+                name: "security".to_string(),
+                command: "bandit".to_string(),
+                args: vec!["-r".to_string(), ".".to_string()],
+                working_dir: project_info.root_path.clone(),
+                timeout: self.config.timeout_seconds,
+            },
+        ];
 
         Ok(checks)
     }
@@ -364,127 +357,116 @@ impl CodeQualityManager {
         &self,
         project_info: &ProjectInfo,
     ) -> Result<Vec<QualityCheck>> {
-        let mut checks = Vec::new();
         let pm_cmd = self.get_package_manager_command(&project_info.package_manager);
+        let mut checks = vec![
+            QualityCheck {
+                name: "lint".to_string(),
+                command: pm_cmd.clone(),
+                args: vec!["run".to_string(), "lint".to_string()],
+                working_dir: project_info.root_path.clone(),
+                timeout: self.config.timeout_seconds,
+            },
+            QualityCheck {
+                name: "test".to_string(),
+                command: pm_cmd.clone(),
+                args: vec!["test".to_string()],
+                working_dir: project_info.root_path.clone(),
+                timeout: self.config.timeout_seconds,
+            },
+            QualityCheck {
+                name: "security".to_string(),
+                command: pm_cmd.clone(),
+                args: vec!["audit".to_string()],
+                working_dir: project_info.root_path.clone(),
+                timeout: self.config.timeout_seconds,
+            },
+        ];
 
-        // Linting
-        checks.push(QualityCheck {
-            name: "lint".to_string(),
-            command: pm_cmd.clone(),
-            args: vec!["run".to_string(), "lint".to_string()],
-            working_dir: project_info.root_path.clone(),
-            timeout: self.config.timeout_seconds,
-        });
-
-        // Type checking (if TypeScript)
+        // Type checking (if TypeScript) - conditionally add
         if project_info.has_typescript {
             checks.push(QualityCheck {
                 name: "typecheck".to_string(),
-                command: pm_cmd.clone(),
+                command: pm_cmd,
                 args: vec!["run".to_string(), "type-check".to_string()],
                 working_dir: project_info.root_path.clone(),
                 timeout: self.config.timeout_seconds,
             });
         }
 
-        // Testing
-        checks.push(QualityCheck {
-            name: "test".to_string(),
-            command: pm_cmd.clone(),
-            args: vec!["test".to_string()],
-            working_dir: project_info.root_path.clone(),
-            timeout: self.config.timeout_seconds,
-        });
-
-        // Security audit
-        checks.push(QualityCheck {
-            name: "security".to_string(),
-            command: pm_cmd.clone(),
-            args: vec!["audit".to_string()],
-            working_dir: project_info.root_path.clone(),
-            timeout: self.config.timeout_seconds,
-        });
-
         Ok(checks)
     }
 
-    fn generate_nodejs_checks(&self, project_info: &ProjectInfo) -> Result<Vec<QualityCheck>> {
-        let mut checks = Vec::new();
+    pub fn generate_nodejs_checks(&self, project_info: &ProjectInfo) -> Result<Vec<QualityCheck>> {
         let pm_cmd = self.get_package_manager_command(&project_info.package_manager);
 
-        checks.push(QualityCheck {
-            name: "lint".to_string(),
-            command: pm_cmd.clone(),
-            args: vec!["run".to_string(), "lint".to_string()],
-            working_dir: project_info.root_path.clone(),
-            timeout: self.config.timeout_seconds,
-        });
-
-        checks.push(QualityCheck {
-            name: "test".to_string(),
-            command: pm_cmd.clone(),
-            args: vec!["test".to_string()],
-            working_dir: project_info.root_path.clone(),
-            timeout: self.config.timeout_seconds,
-        });
-
-        checks.push(QualityCheck {
-            name: "security".to_string(),
-            command: pm_cmd,
-            args: vec!["audit".to_string()],
-            working_dir: project_info.root_path.clone(),
-            timeout: self.config.timeout_seconds,
-        });
+        let checks = vec![
+            QualityCheck {
+                name: "lint".to_string(),
+                command: pm_cmd.clone(),
+                args: vec!["run".to_string(), "lint".to_string()],
+                working_dir: project_info.root_path.clone(),
+                timeout: self.config.timeout_seconds,
+            },
+            QualityCheck {
+                name: "test".to_string(),
+                command: pm_cmd.clone(),
+                args: vec!["test".to_string()],
+                working_dir: project_info.root_path.clone(),
+                timeout: self.config.timeout_seconds,
+            },
+            QualityCheck {
+                name: "security".to_string(),
+                command: pm_cmd,
+                args: vec!["audit".to_string()],
+                working_dir: project_info.root_path.clone(),
+                timeout: self.config.timeout_seconds,
+            },
+        ];
 
         Ok(checks)
     }
 
     pub fn generate_rust_checks(&self, project_info: &ProjectInfo) -> Result<Vec<QualityCheck>> {
-        let mut checks = Vec::new();
-
-        checks.push(QualityCheck {
-            name: "format".to_string(),
-            command: "cargo".to_string(),
-            args: vec!["fmt".to_string(), "--check".to_string()],
-            working_dir: project_info.root_path.clone(),
-            timeout: self.config.timeout_seconds,
-        });
-
-        checks.push(QualityCheck {
-            name: "lint".to_string(),
-            command: "cargo".to_string(),
-            args: vec![
-                "clippy".to_string(),
-                "--".to_string(),
-                "-D".to_string(),
-                "warnings".to_string(),
-            ],
-            working_dir: project_info.root_path.clone(),
-            timeout: self.config.timeout_seconds,
-        });
-
-        checks.push(QualityCheck {
-            name: "test".to_string(),
-            command: "cargo".to_string(),
-            args: vec!["test".to_string()],
-            working_dir: project_info.root_path.clone(),
-            timeout: self.config.timeout_seconds,
-        });
+        let checks = vec![
+            QualityCheck {
+                name: "format".to_string(),
+                command: "cargo".to_string(),
+                args: vec!["fmt".to_string(), "--check".to_string()],
+                working_dir: project_info.root_path.clone(),
+                timeout: self.config.timeout_seconds,
+            },
+            QualityCheck {
+                name: "lint".to_string(),
+                command: "cargo".to_string(),
+                args: vec![
+                    "clippy".to_string(),
+                    "--".to_string(),
+                    "-D".to_string(),
+                    "warnings".to_string(),
+                ],
+                working_dir: project_info.root_path.clone(),
+                timeout: self.config.timeout_seconds,
+            },
+            QualityCheck {
+                name: "test".to_string(),
+                command: "cargo".to_string(),
+                args: vec!["test".to_string()],
+                working_dir: project_info.root_path.clone(),
+                timeout: self.config.timeout_seconds,
+            },
+        ];
 
         Ok(checks)
     }
 
     pub fn generate_basic_checks(&self, project_info: &ProjectInfo) -> Result<Vec<QualityCheck>> {
-        let mut checks = Vec::new();
-
-        // Basic file validation
-        checks.push(QualityCheck {
+        let checks = vec![QualityCheck {
             name: "validate".to_string(),
             command: "echo".to_string(),
             args: vec!["Basic validation completed".to_string()],
             working_dir: project_info.root_path.clone(),
             timeout: self.config.timeout_seconds,
-        });
+        }];
 
         Ok(checks)
     }
