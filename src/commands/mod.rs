@@ -1,3 +1,4 @@
+pub mod code_quality;
 pub mod config;
 pub mod create_release;
 pub mod dependency_update;

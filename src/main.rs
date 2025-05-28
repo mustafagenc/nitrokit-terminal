@@ -74,7 +74,10 @@ fn print_banner() {
 }
 
 fn show_menu() {
-    println!("{}", format!("Version: v{}", VERSION).green().bold().cyan());
+    println!(
+        "{}",
+        format!("Nitrokit v{} - Built with Rust 🦀", VERSION).dimmed().bold().blue()
+    );
     println!();
     println!("{}", "Available commands:".yellow().bold());
     println!("  {} Create a new release", "1. 🚀 create-release".green());
@@ -90,9 +93,13 @@ fn show_menu() {
         "  {} Sync translations using Gemini AI",
         "4. 🌍 sync-translations".green()
     );
-    println!("  {} Manage configuration settings", "5. ⚙️ config".blue());
-    println!("  {} Manage project versioning", "6. 🏷️ version".blue());
-    println!("  {} Show this help menu", "7. ❓ help".blue());
+    println!(
+        "  {} Run code quality checks (lint, format, security)",
+        "5. 🔍 code-quality".green()
+    );
+    println!("  {} Manage configuration settings", "6. ⚙️ config".blue());
+    println!("  {} Manage project versioning", "7. 🏷️ version".blue());
+    println!("  {} Show this help menu", "8. ❓ help".blue());
     println!();
     println!("  {}", "0  🚪 exit".red());
     println!();
@@ -134,6 +141,40 @@ async fn main() {
                         .help("Release message")
                         .required(false)
                         .index(2),
+                ),
+        )
+        .subcommand(
+            Command::new("code-quality")
+                .about("Run code quality checks (linting, formatting, security)")
+                .arg(
+                    clap::Arg::new("path")
+                        .short('p')
+                        .long("path")
+                        .value_name("PATH")
+                        .help("Project path to analyze")
+                        .required(false),
+                )
+                .arg(
+                    clap::Arg::new("config")
+                        .short('c')
+                        .long("config")
+                        .value_name("FILE")
+                        .help("Custom config file path")
+                        .required(false),
+                )
+                .arg(
+                    clap::Arg::new("skip-deps")
+                        .long("skip-deps")
+                        .help("Skip dependency installation")
+                        .action(clap::ArgAction::SetTrue),
+                )
+                .arg(
+                    clap::Arg::new("checks")
+                        .long("checks")
+                        .value_name("LIST")
+                        .help("Enable specific checks only (comma-separated)")
+                        .value_delimiter(',')
+                        .required(false),
                 ),
         )
         .subcommand(
@@ -184,6 +225,46 @@ async fn main() {
                 println!("{}", "🌍 Syncing translations...".yellow());
                 if let Err(e) = commands::translation_sync::sync_translations_interactive().await {
                     eprintln!("{}", format!("❌ Translation sync failed: {}", e).red());
+                    std::process::exit(1);
+                }
+            }
+            Some(("code-quality", sub_matches)) => {
+                let path = sub_matches.get_one::<String>("path").cloned();
+                let config_path = sub_matches.get_one::<String>("config").cloned();
+                let skip_deps = sub_matches.get_flag("skip-deps");
+                let checks: Option<Vec<String>> = sub_matches
+                    .get_many::<String>("checks")
+                    .map(|vals| vals.cloned().collect());
+
+                println!("{}", "🔍 Running code quality checks...".yellow());
+                let mut quality_config = if let Some(config_file) = &config_path {
+                    match tokio::fs::read_to_string(config_file).await {
+                        Ok(content) => match serde_json::from_str(&content) {
+                            Ok(config) => config,
+                            Err(e) => {
+                                eprintln!("{}", format!("❌ Failed to parse config file: {}", e).red());
+                                std::process::exit(1);
+                            }
+                        },
+                        Err(e) => {
+                            eprintln!("{}", format!("❌ Failed to read config file: {}", e).red());
+                            std::process::exit(1);
+                        }
+                    }
+                } else {
+                    commands::code_quality::CodeQualityConfig::default()
+                };
+
+                if skip_deps {
+                    quality_config.skip_dependencies = true;
+                }
+
+                if let Some(check_list) = checks {
+                    quality_config.enabled_checks = check_list;
+                }
+
+                if let Err(e) = commands::code_quality::run_code_quality(path, config_path).await {
+                    eprintln!("{}", format!("❌ Code quality checks failed: {}", e).red());
                     std::process::exit(1);
                 }
             }
@@ -311,7 +392,15 @@ async fn run_interactive_mode() {
                 println!("\n{}", "Press Enter to continue...".dimmed());
                 let _ = get_user_input();
             }
-            "5" | "config" => {
+            "5" | "code-quality" => {
+                println!("{}", "\n🔍 Running code quality checks...".yellow());
+                if let Err(e) = commands::code_quality::run_code_quality(None, None).await {
+                    println!("{}", format!("❌ Code quality checks failed: {}", e).red());
+                }
+                println!("\n{}", "Press Enter to continue...".dimmed());
+                let _ = get_user_input();
+            }
+            "6" | "config" => {
                 println!("\n{}", "⚙️  Configuration Management".cyan().bold());
                 println!("{}", "═".repeat(30).dimmed());
                 println!("  {} Show current configuration", "1.".dimmed());
@@ -344,7 +433,7 @@ async fn run_interactive_mode() {
                 println!("\n{}", "Press Enter to continue...".dimmed());
                 let _ = get_user_input();
             }
-            "6" | "version" => {
+            "7" | "version" => {
                 println!("\n{}", "🏷️  Version Management".cyan().bold());
                 println!("{}", "═".repeat(30).dimmed());
                 println!("  {} Bump patch version (x.x.X)", "1.".dimmed());
@@ -409,7 +498,7 @@ async fn run_interactive_mode() {
                 println!("\n{}", "Press Enter to continue...".dimmed());
                 let _ = get_user_input();
             }
-            "7" | "help" => {
+            "8" | "help" => {
                 println!(
                     "\n{}",
                     format!(
@@ -438,6 +527,10 @@ async fn run_interactive_mode() {
                     "  {} - Sync translations using Gemini AI",
                     "🌍 sync-translations".green()
                 );
+                println!(
+                    "  {} - Run code quality checks (lint, format, security)",
+                    "🔍 code-quality".green()
+                );
                 println!("  {} - Manage configuration settings", "⚙️  config".blue());
                 println!("  {} - Manage project versioning", "🏷️  version".blue());
                 println!("  {} - Show this help information", "❓ help".blue());
@@ -453,14 +546,20 @@ async fn run_interactive_mode() {
                     "  {} nitrokit sync-translations",
                     "Sync translations:".dimmed()
                 );
+                println!(
+                    "  {} nitrokit code-quality --path ./my-project",
+                    "Code quality:".dimmed()
+                );
+                println!(
+                    "  {} nitrokit code-quality --checks lint,format",
+                    "Specific checks:".dimmed()
+                );
                 println!("  {} nitrokit config show", "Config management:".dimmed());
                 println!("  {} nitrokit version patch", "Version bump:".dimmed());
                 println!(
                     "  {} nitrokit (then select option)",
                     "Interactive mode:".dimmed()
                 );
-                println!("  {} nitrokit --version", "Version info:".dimmed());
-                println!("  {} nitrokit check-updates", "Check updates:".dimmed());
                 println!();
                 println!(
                     "{}",
@@ -476,7 +575,6 @@ async fn run_interactive_mode() {
                 );
                 break;
             }
-            // ...existing code...
             _ => {
                 println!("{} {}", "❌ Unknown command:".red(), input.yellow());
                 println!(

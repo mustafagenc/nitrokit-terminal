@@ -4,3 +4,4 @@ pub mod dependency_update_test;
 pub mod release_notes_test;
 pub mod translation_sync_test;
 pub mod version_management_test;
+pub mod code_quality_test;
