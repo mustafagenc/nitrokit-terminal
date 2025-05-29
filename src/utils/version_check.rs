@@ -19,7 +19,7 @@ pub struct VersionCache {
 }
 
 pub const GITHUB_API_URL: &str =
-    "https://api.github.com/repos/mustafagenc/nitroterm-terminal/releases/latest";
+    "https://api.github.com/repos/mustafagenc/nitroterm/releases/latest";
 pub const CACHE_FILE: &str = ".nitroterm_version_cache.json";
 pub const CHECK_INTERVAL_HOURS: u64 = 24; // Check once per day
 
@@ -73,7 +73,7 @@ pub async fn check_for_updates(
 pub async fn fetch_latest_version() -> Result<GitHubRelease, Box<dyn std::error::Error>> {
     let client = reqwest::Client::builder()
         .timeout(Duration::from_secs(10))
-        .user_agent("nitroterm-terminal")
+        .user_agent("nitroterm")
         .build()?;
 
     let response = client.get(GITHUB_API_URL).send().await?;

@@ -5,13 +5,13 @@
 ### Windows (PowerShell)
 
 ```powershell
-irm https://raw.githubusercontent.com/mustafagenc/nitroterm-terminal/main/scripts/install.ps1 | iex
+irm https://raw.githubusercontent.com/mustafagenc/nitroterm/main/scripts/install.ps1 | iex
 ```
 
 ### macOS/Linux (Bash)
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/mustafagenc/nitroterm-terminal/main/scripts/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/mustafagenc/nitroterm/main/scripts/install.sh | bash
 ```
 
 ## Manual Installation
@@ -24,8 +24,8 @@ curl -sSL https://raw.githubusercontent.com/mustafagenc/nitroterm-terminal/main/
 ### From Source
 
 ```bash
-git clone https://github.com/mustafagenc/nitroterm-terminal.git
-cd nitroterm-terminal/nitroterm
+git clone https://github.com/mustafagenc/nitroterm.git
+cd nitroterm/nitroterm
 cargo build --release
 cargo install --path .
 ```
@@ -58,12 +58,12 @@ nki     # shortcut for nitroterm -i (interactive)
 
 ```powershell
 # Download and run uninstaller
-Invoke-WebRequest -Uri "https://raw.githubusercontent.com/mustafagenc/nitroterm-terminal/main/scripts/uninstall.ps1" -OutFile "uninstall.ps1"
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/mustafagenc/nitroterm/main/scripts/uninstall.ps1" -OutFile "uninstall.ps1"
 .\uninstall.ps1
 ```
 
 ### macOS/Linux
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/mustafagenc/nitroterm-terminal/main/scripts/uninstall.sh | bash
+curl -sSL https://raw.githubusercontent.com/mustafagenc/nitroterm/main/scripts/uninstall.sh | bash
 ```

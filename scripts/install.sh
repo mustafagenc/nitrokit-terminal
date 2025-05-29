@@ -26,10 +26,10 @@ print_banner() {
     cat << "EOF"
     ███╗   ██╗██╗████████╗██████╗  ██████╗ ██╗  ██╗██╗████████╗
     ████╗  ██║██║╚══██╔══╝██╔══██╗██╔═══██╗██║ ██╔╝██║╚══██╔══╝
-    ██╔██╗ ██║██║   ██║   ██████╔╝██║   ██║█████╔╝ ██║   ██║   
-    ██║╚██╗██║██║   ██║   ██╔══██╗██║   ██║██╔═██╗ ██║   ██║   
-    ██║ ╚████║██║   ██║   ██║  ██║╚██████╔╝██║  ██╗██║   ██║   
-    ╚═╝  ╚═══╝╚═╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝   ╚═╝   
+    ██╔██╗ ██║██║   ██║   ██████╔╝██║   ██║█████╔╝ ██║   ██║
+    ██║╚██╗██║██║   ██║   ██╔══██╗██║   ██║██╔═██╗ ██║   ██║
+    ██║ ╚████║██║   ██║   ██║  ██║╚██████╔╝██║  ██╗██║   ██║
+    ╚═╝  ╚═══╝╚═╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝   ╚═╝
 
     🚀 Nitroterm macOS/Linux Installer
     A terminal tool for project management and automation
@@ -58,7 +58,7 @@ log_error() {
 # Check system requirements
 check_requirements() {
     log_info "🔍 Checking system requirements..."
-    
+
     # Check for Rust
     if command -v cargo >/dev/null 2>&1; then
         RUST_VERSION=$(cargo --version)
@@ -67,7 +67,7 @@ check_requirements() {
         log_warning "Rust not found. Installing Rust..."
         install_rust
     fi
-    
+
     # Check for Git
     if command -v git >/dev/null 2>&1; then
         GIT_VERSION=$(git --version)
@@ -89,17 +89,17 @@ check_requirements() {
 install_rust() {
     log_info "📥 Downloading Rust installer..."
     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-    
+
     # Source the cargo environment
     source "$HOME/.cargo/env"
-    
+
     log_success "Rust installation completed!"
 }
 
 # Create installation directory
 create_install_dir() {
     log_info "📁 Creating installation directory: $INSTALL_DIR"
-    
+
     if [[ -d "$INSTALL_DIR" ]] && [[ "$FORCE_INSTALL" != "true" ]]; then
         read -p "Installation directory already exists. Continue? [y/N]: " -r
         if [[ ! $REPLY =~ ^[Yy]$ ]]; then
@@ -107,7 +107,7 @@ create_install_dir() {
             exit 1
         fi
     fi
-    
+
     mkdir -p "$INSTALL_DIR"
     log_success "Installation directory created!"
 }
@@ -115,25 +115,25 @@ create_install_dir() {
 # Build or download Nitroterm
 install_nitroterm() {
     local nitroterm_binary="$INSTALL_DIR/nitroterm"
-    
+
     if [[ "$BUILD_FROM_SOURCE" == "true" ]]; then
         log_info "🏗️  Building Nitroterm from source..."
-        
+
         # Create temporary directory
         local temp_dir=$(mktemp -d)
         cd "$temp_dir"
-        
+
         log_info "📥 Cloning repository..."
-        git clone https://github.com/mustafagenc/nitroterm-terminal.git
-        
-        cd nitroterm-terminal/nitroterm
-        
+        git clone https://github.com/mustafagenc/nitroterm.git
+
+        cd nitroterm/nitroterm
+
         log_info "🔨 Compiling Nitroterm..."
         cargo build --release
-        
+
         log_info "📦 Installing binary..."
         cp target/release/nitroterm "$nitroterm_binary"
-        
+
         # Cleanup
         rm -rf "$temp_dir"
     else
@@ -141,10 +141,10 @@ install_nitroterm() {
         log_info "📥 Downloading Nitroterm binary..."
         # curl -L -o "$nitroterm_binary" "https://github.com/mustafagenc/nitroterm/releases/latest/download/nitroterm-$(uname -s)-$(uname -m)"
     fi
-    
+
     # Make executable
     chmod +x "$nitroterm_binary"
-    
+
     # Verify installation
     if [[ -x "$nitroterm_binary" ]]; then
         log_success "Nitroterm binary installed successfully!"
@@ -159,13 +159,13 @@ add_to_path() {
     if [[ "$ADD_TO_SHELL" != "true" ]]; then
         return
     fi
-    
+
     log_info "🔧 Adding Nitroterm to PATH..."
-    
+
     # Detect shell
     local shell_name=$(basename "$SHELL")
     local shell_rc=""
-    
+
     case "$shell_name" in
         bash)
             if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -185,30 +185,30 @@ add_to_path() {
             return
             ;;
     esac
-    
+
     # Check if already in PATH
     if echo "$PATH" | grep -q "$INSTALL_DIR"; then
         log_success "Already in PATH!"
         return
     fi
-    
+
     # Add to shell configuration
     if [[ "$shell_name" == "fish" ]]; then
         echo "set -gx PATH $INSTALL_DIR \$PATH" >> "$shell_rc"
     else
         echo "export PATH=\"$INSTALL_DIR:\$PATH\"" >> "$shell_rc"
     fi
-    
+
     log_success "Added to PATH! (restart your terminal or run 'source $shell_rc')"
 }
 
 # Create alias for easy access
 create_alias() {
     log_info "🔗 Creating helpful aliases..."
-    
+
     local shell_name=$(basename "$SHELL")
     local shell_rc=""
-    
+
     case "$shell_name" in
         bash)
             if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -224,7 +224,7 @@ create_alias() {
             shell_rc="$HOME/.config/fish/config.fish"
             ;;
     esac
-    
+
     if [[ -n "$shell_rc" ]]; then
         if [[ "$shell_name" == "fish" ]]; then
             echo "alias nk='nitroterm'" >> "$shell_rc"
@@ -233,7 +233,7 @@ create_alias() {
             echo "alias nk='nitroterm'" >> "$shell_rc"
             echo "alias nki='nitroterm -i'" >> "$shell_rc"
         fi
-        
+
         log_success "Aliases created! Use 'nk' or 'nki' for quick access."
     fi
 }
@@ -278,17 +278,17 @@ done
 # Main installation process
 main() {
     print_banner
-    
+
     log_info "Starting Nitroterm installation..."
     log_info "Installation directory: $INSTALL_DIR"
     echo ""
-    
+
     check_requirements
     create_install_dir
     install_nitroterm
     add_to_path
     create_alias
-    
+
     echo ""
     echo -e "${GREEN}🎉 Installation completed successfully!${NC}"
     echo ""
@@ -300,10 +300,10 @@ main() {
     echo "   • Generate release notes: nitroterm release-notes"
     echo "   • Update dependencies: nitroterm update-dependencies"
     echo ""
-    echo -e "${CYAN}📚 Documentation:${NC} https://github.com/mustafagenc/nitroterm-terminal"
+    echo -e "${CYAN}📚 Documentation:${NC} https://github.com/mustafagenc/nitroterm"
     echo -e "${CYAN}🐛 Issues:${NC} https://github.com/mustafagenc/nitroterm-/issues"
     echo ""
-    
+
     if [[ "$ADD_TO_SHELL" == "true" ]]; then
         echo -e "${YELLOW}💡 Don't forget to restart your terminal or run 'source ~/.bashrc' (or equivalent)${NC}"
         echo ""

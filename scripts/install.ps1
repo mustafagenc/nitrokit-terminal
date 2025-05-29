@@ -98,7 +98,7 @@ if ($buildFromSource) {
     }
 
     Write-Host "📥 Cloning repository..." -ForegroundColor Blue
-    git clone https://github.com/mustafagenc/nitroterm-terminal.git $tempDir
+    git clone https://github.com/mustafagenc/nitroterm.git $tempDir
 
     # Build project
     Write-Host "🔨 Compiling Nitroterm..." -ForegroundColor Blue
@@ -181,8 +181,8 @@ Write-Host @"
    • Generate release notes: nitroterm release-notes
    • Update dependencies: nitroterm update-dependencies
 
-📚 Documentation: https://github.com/mustafagenc/nitroterm-terminal
-🐛 Issues: https://github.com/mustafagenc/nitroterm-terminal/issues
+📚 Documentation: https://github.com/mustafagenc/nitroterm
+🐛 Issues: https://github.com/mustafagenc/nitroterm/issues
 
 "@ -ForegroundColor Green
 

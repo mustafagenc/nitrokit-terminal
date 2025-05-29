@@ -57,14 +57,14 @@ Nitroterm is a powerful terminal application written in Rust that provides compr
 #### Install Script (Unix/Linux/macOS)
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/mustafagenc/nitroterm-terminal/refs/heads/main/scripts/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/mustafagenc/nitroterm/refs/heads/main/scripts/install.sh | bash
 ```
 
 #### Manual Installation
 
 ```bash
 # Download and install (example for Linux)
-wget https://github.com/mustafagenc/nitroterm-terminal/releases/latest/download/nitroterm-linux-x86_64
+wget https://github.com/mustafagenc/nitroterm/releases/latest/download/nitroterm-linux-x86_64
 chmod +x nitroterm-linux-x86_64
 sudo mv nitroterm-linux-x86_64 /usr/local/bin/nitroterm
 ```
@@ -202,7 +202,7 @@ nitroterm sync-translations
 ## 🏗️ Project Structure
 
 ```
-nitroterm-terminal/
+nitroterm/
 ├── src/
 │   ├── commands/           # Command implementations
 │   │   ├── dependency_update.rs
@@ -254,8 +254,8 @@ cargo test --all-features
 
 ```bash
 # Clone the repository
-git clone https://github.com/mustafagenc/nitroterm-terminal.git
-cd nitroterm-terminal
+git clone https://github.com/mustafagenc/nitroterm.git
+cd nitroterm
 
 # Debug build
 cargo build
@@ -347,7 +347,7 @@ We welcome contributions! Here's how you can help:
 
 ## 🐛 Issue Reporting
 
-Found a bug? Please [open an issue](https://github.com/mustafagenc/nitroterm-terminal/issues) with:
+Found a bug? Please [open an issue](https://github.com/mustafagenc/nitroterm/issues) with:
 
 - **Environment**: OS, Rust version, package manager versions
 - **Expected Behavior**: What should happen
@@ -357,8 +357,8 @@ Found a bug? Please [open an issue](https://github.com/mustafagenc/nitroterm-ter
 
 ## 💬 Community
 
-- **GitHub Discussions**: [Ask questions and share ideas](https://github.com/mustafagenc/nitroterm-terminal/discussions)
-- **Issue Tracker**: [Report bugs and request features](https://github.com/mustafagenc/nitroterm-terminal/issues)
+- **GitHub Discussions**: [Ask questions and share ideas](https://github.com/mustafagenc/nitroterm/discussions)
+- **Issue Tracker**: [Report bugs and request features](https://github.com/mustafagenc/nitroterm/issues)
 - **Email**: eposta@mustafagenc.info
 
 ## 📄 License
