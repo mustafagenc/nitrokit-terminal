@@ -19,6 +19,69 @@ BLUE='\033[0;34m'
 CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    # macOS için
+    INSTALL_DIR="${INSTALL_DIR:-/usr/local/bin}"
+else
+    # Linux için
+    INSTALL_DIR="${INSTALL_DIR:-$HOME/.local/bin}"
+fi
+
+select_install_dir() {
+    if [[ -n "$INSTALL_DIR" ]]; then
+        return  # Already set via command line
+    fi
+
+    log_info "📁 Select installation directory:"
+    echo ""
+
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        # macOS options
+        echo "  1. /usr/local/bin (recommended, requires sudo)"
+        echo "  2. $HOME/.local/bin (user only)"
+        echo "  3. $HOME/bin (user only)"
+        echo "  4. Custom path"
+        echo ""
+        read -p "Choose option [1-4] (default: 1): " -r choice
+
+        case "${choice:-1}" in
+            1) INSTALL_DIR="/usr/local/bin" ;;
+            2) INSTALL_DIR="$HOME/.local/bin" ;;
+            3) INSTALL_DIR="$HOME/bin" ;;
+            4)
+                read -p "Enter custom path: " -r INSTALL_DIR
+                ;;
+            *)
+                log_error "Invalid choice"
+                exit 1
+                ;;
+        esac
+    else
+        # Linux options
+        echo "  1. $HOME/.local/bin (recommended)"
+        echo "  2. $HOME/bin"
+        echo "  3. /usr/local/bin (system-wide, requires sudo)"
+        echo "  4. Custom path"
+        echo ""
+        read -p "Choose option [1-4] (default: 1): " -r choice
+
+        case "${choice:-1}" in
+            1) INSTALL_DIR="$HOME/.local/bin" ;;
+            2) INSTALL_DIR="$HOME/bin" ;;
+            3) INSTALL_DIR="/usr/local/bin" ;;
+            4)
+                read -p "Enter custom path: " -r INSTALL_DIR
+                ;;
+            *)
+                log_error "Invalid choice"
+                exit 1
+                ;;
+        esac
+    fi
+
+    log_info "Selected installation directory: $INSTALL_DIR"
+}
+
 # Banner
 print_banner() {
     echo -e "${CYAN}"
