@@ -111,46 +111,87 @@ create_install_dir() {
     log_success "Installation directory created!"
 }
 
-# Build or download Nitroterm
+# Debug versiyonu - install.sh dosyasındaki install_nitroterm fonksiyonunu şununla değiştir:
+
 install_nitroterm() {
     local nitroterm_binary="$INSTALL_DIR/nitroterm"
 
-    if [[ "$BUILD_FROM_SOURCE" == "true" ]]; then
-        log_info "🏗️  Building Nitroterm from source..."
+    log_info "🏗️  Building Nitroterm from source..."
+    log_info "Target binary location: $nitroterm_binary"
 
-        # Create temporary directory
-        local temp_dir=$(mktemp -d)
-        cd "$temp_dir"
+    # Create temporary directory
+    local temp_dir=$(mktemp -d)
+    log_info "Temp directory: $temp_dir"
+    cd "$temp_dir"
 
-        log_info "📥 Cloning repository..."
-        git clone https://github.com/mustafagenc/nitroterm.git
-
-        cd nitroterm  # ✅ Tek directory
-
-        log_info "🔨 Compiling Nitroterm..."
-        cargo build --release
-
-        log_info "📦 Installing binary..."
-        cp target/release/nitroterm "$nitroterm_binary"
-
-        # Cleanup
-        rm -rf "$temp_dir"
+    log_info "📥 Cloning repository..."
+    if git clone https://github.com/mustafagenc/nitroterm.git; then
+        log_success "Repository cloned successfully"
     else
-        # Future: download pre-built binary
-        log_info "📥 Downloading Nitroterm binary..."
-        # curl -L -o "$nitroterm_binary" "https://github.com/mustafagenc/nitroterm/releases/latest/download/nitroterm-$(uname -s)-$(uname -m)"
+        log_error "Failed to clone repository"
+        exit 1
     fi
+
+    cd nitroterm
+
+    # Check if we're in the right directory
+    log_info "Current directory: $(pwd)"
+    log_info "Directory contents:"
+    ls -la
+
+    # Check if Cargo.toml exists
+    if [[ -f "Cargo.toml" ]]; then
+        log_success "Found Cargo.toml"
+    else
+        log_error "Cargo.toml not found!"
+        exit 1
+    fi
+
+    log_info "🔨 Compiling Nitroterm..."
+    if cargo build --release; then
+        log_success "Build completed successfully!"
+    else
+        log_error "Build failed!"
+        exit 1
+    fi
+
+    # Check if binary was created
+    if [[ -f "target/release/nitroterm" ]]; then
+        log_success "Binary found at target/release/nitroterm"
+        ls -la target/release/nitroterm
+    else
+        log_error "Binary not found!"
+        ls -la target/release/ || echo "target/release directory doesn't exist"
+        exit 1
+    fi
+
+    log_info "📦 Installing binary to $nitroterm_binary..."
+    if cp target/release/nitroterm "$nitroterm_binary"; then
+        log_success "Binary copied successfully"
+    else
+        log_error "Failed to copy binary"
+        exit 1
+    fi
+
+    # Cleanup
+    rm -rf "$temp_dir"
 
     # Make executable
     chmod +x "$nitroterm_binary"
 
-    # Verify installation
+    # Check if binary is executable
     if [[ -x "$nitroterm_binary" ]]; then
         log_success "Nitroterm binary installed successfully!"
+        log_info "Binary location: $nitroterm_binary"
+        log_info "Binary permissions: $(ls -la "$nitroterm_binary")"
 
         # Test the binary
-        local version_output=$("$nitroterm_binary" --version 2>/dev/null || echo "version check failed")
-        log_info "Version: $version_output"
+        log_info "Testing binary..."
+        if "$nitroterm_binary" --version 2>/dev/null; then
+            log_success "Binary test successful!"
+        else
+            log_warning "Binary test failed, but installation completed"
+        fi
     else
         log_error "Failed to install Nitroterm binary!"
         exit 1
