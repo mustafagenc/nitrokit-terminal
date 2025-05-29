@@ -80,7 +80,7 @@ fn print_banner() {
     );
     println!(
         "{}",
-        "║          🌐 https://nitroterm.tr  •  📧 hello@nitroterm.tr           ║".cyan()
+        "║           🌐 https://nitrokit.tr  •  📧 hello@nitrokit.tr            ║".cyan()
     );
     println!(
         "{}",
@@ -96,11 +96,12 @@ fn print_banner() {
 fn show_menu() {
     println!(
         "{}",
-        format!("Nitroterm v{} - Built with Rust 🦀", VERSION).dimmed().bold().blue()
+        format!(" Nitroterm v{} - Built with Rust 🦀", VERSION).dimmed().bold().blue()
     );
     println!();
-    println!("{}", "Available commands:".yellow().bold());
-    println!("  {} Create a new release", "1. 🚀 create-release".green());
+    println!("{}", " 🚀 Tools".yellow().bold());
+    println!();
+    println!("  {} Create a new release", "1. 🎁 create-release".green());
     println!(
         "  {} Generate release notes from git commits",
         "2. 📦 release-notes".green()
@@ -117,7 +118,15 @@ fn show_menu() {
         "  {} Run code quality checks (lint, format, security)",
         "5. 🔍 code-quality".green()
     );
+
+    println!();
+    println!("{}", " 🤝 Collaboration".cyan().bold());
+    println!();
     println!("  {} Manage GitHub repository labels", "6. 🏷️ github-labels".green());
+
+    println!();
+    println!("{}", " ⚙️ Settings".cyan().bold());
+    println!();
     println!("  {} Manage configuration settings", "7. ⚙️ config".blue());
     println!("  {} Manage project versioning", "8. 🏷️ version".blue());
     println!("  {} Show this help menu", "9. ❓ help".blue());

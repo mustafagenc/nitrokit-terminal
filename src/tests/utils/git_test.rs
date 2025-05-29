@@ -404,7 +404,7 @@ mod tests {
         assert_eq!(state, git2::RepositoryState::Clean);
     }
 
-        // Test for specific git repository discovery behavior
+    // Test for specific git repository discovery behavior
     #[test]
     fn test_git_discovery_behavior() {
         let temp_dir = tempdir().expect("Failed to create temp directory");
@@ -428,7 +428,8 @@ mod tests {
 
                 if repo_result.is_ok() {
                     // If our function also works, verify paths match
-                    let actual_git_dir = normalize_path(&repo_result.unwrap().path().to_string_lossy());
+                    let actual_git_dir =
+                        normalize_path(&repo_result.unwrap().path().to_string_lossy());
                     assert_eq!(actual_git_dir, expected_git_dir);
                     println!("Our get_repository function also supports subdirectory discovery");
                 } else {
@@ -437,10 +438,15 @@ mod tests {
 
                     // But verify that direct repository access works
                     let direct_result = get_repository(repo_path.to_str().unwrap());
-                    assert!(direct_result.is_ok(), "Direct repository access should work");
+                    assert!(
+                        direct_result.is_ok(),
+                        "Direct repository access should work"
+                    );
 
                     // This is acceptable behavior - not all git functions support discovery
-                    println!("Note: This is acceptable - our function requires direct repository path");
+                    println!(
+                        "Note: This is acceptable - our function requires direct repository path"
+                    );
                 }
             }
             Err(_) => {
@@ -457,12 +463,13 @@ mod tests {
 
                 // Either way, direct access should work
                 let direct_result = get_repository(repo_path.to_str().unwrap());
-                assert!(direct_result.is_ok(), "Direct repository access should work");
+                assert!(
+                    direct_result.is_ok(),
+                    "Direct repository access should work"
+                );
             }
         }
     }
-
-
 
     #[test]
     fn test_error_handling_permission_denied() {
