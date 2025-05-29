@@ -17,7 +17,6 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 CYAN='\033[0;36m'
-GRAY='\033[0;37m'
 NC='\033[0m' # No Color
 
 # Banner
@@ -126,7 +125,7 @@ install_nitroterm() {
         log_info "📥 Cloning repository..."
         git clone https://github.com/mustafagenc/nitroterm.git
 
-        cd nitroterm/nitroterm
+        cd nitroterm  # ✅ Tek directory
 
         log_info "🔨 Compiling Nitroterm..."
         cargo build --release
@@ -148,6 +147,10 @@ install_nitroterm() {
     # Verify installation
     if [[ -x "$nitroterm_binary" ]]; then
         log_success "Nitroterm binary installed successfully!"
+
+        # Test the binary
+        local version_output=$("$nitroterm_binary" --version 2>/dev/null || echo "version check failed")
+        log_info "Version: $version_output"
     else
         log_error "Failed to install Nitroterm binary!"
         exit 1
